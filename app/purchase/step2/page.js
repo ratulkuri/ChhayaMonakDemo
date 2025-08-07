@@ -105,7 +105,7 @@ export default function Step2() {
             <Button 
               variant="ghost" 
               onClick={() => router.push('/purchase/step1')}
-              className="flex items-center text-gray-600"
+              className="flex items-center text-gray-600 ps-0"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
