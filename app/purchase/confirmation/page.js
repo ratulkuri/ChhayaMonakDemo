@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, Download, Mail, Phone } from 'lucide-react'
+import { FaWhatsapp } from "react-icons/fa6";
+import Link from 'next/link'
 
 export default function Confirmation() {
   const router = useRouter()
@@ -133,17 +135,26 @@ export default function Confirmation() {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Need Help?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center">
-              <Phone className="w-5 h-5 text-[#30bd82] mr-3" />
+              {/* <Phone className="w-5 h-5 text-[#30bd82] mr-3" /> */}
+              <FaWhatsapp className="w-5 h-5 text-[#30bd82] mr-3" />
               <div>
                 <p className="font-semibold text-gray-900">24/7 Support</p>
-                <p className="text-sm text-gray-600">+974 1234 5678</p>
+                <p className="text-sm text-gray-600">
+                  <Link target='_blank' rel='noopener noreferrer' href={"https://wa.me/8801601508899"}>
+                    +880 1601-508899
+                  </Link>
+                </p>
               </div>
             </div>
             <div className="flex items-center">
               <Mail className="w-5 h-5 text-[#30bd82] mr-3" />
               <div>
                 <p className="font-semibold text-gray-900">Email Support</p>
-                <p className="text-sm text-gray-600">support@insurance.com</p>
+                <p className="text-sm text-gray-600">
+                  <Link target='_blank' rel='noopener noreferrer' href={"mailto:info@chhaya.life"}>
+                    info@chhaya.life
+                  </Link>
+                </p>
               </div>
             </div>
           </div>
@@ -153,13 +164,13 @@ export default function Confirmation() {
         <div className="flex flex-col sm:flex-row gap-4">
           <Button 
             onClick={handleNewPurchase}
-            className="flex-1 h-auto bg-[#30bd82] hover:bg-[#28a574] text-white py-3 font-semibold rounded-lg"
+            className="flex-1 cursor-pointer h-auto bg-[#30bd82] hover:bg-[#28a574] text-white py-3 font-semibold rounded-lg"
           >
             Purchase Another Plan
           </Button>
           <Button 
             variant="outline"
-            className="flex-1 h-auto border-[#30bd82] text-[#30bd82] hover:bg-[#30bd82] hover:text-white py-3 font-semibold rounded-lg flex items-center justify-center"
+            className="flex-1 cursor-pointer h-auto border-[#30bd82] text-[#30bd82] hover:bg-[#30bd82] hover:text-white py-3 font-semibold rounded-lg flex items-center justify-center"
           >
             <Download className="w-4 h-4 mr-2" />
             Download Receipt

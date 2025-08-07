@@ -1,4 +1,6 @@
 import { Phone, Mail, MapPin } from 'lucide-react'
+import Link from 'next/link'
+import { FaWhatsapp } from 'react-icons/fa6'
 
 export default function Footer() {
   return (
@@ -10,16 +12,24 @@ export default function Footer() {
             <h3 className="text-xl font-semibold mb-4">Contact Us</h3>
             <div className="space-y-3">
               <div className="flex items-center">
-                <Phone className="w-5 h-5 mr-3 text-[#30bd82]" />
-                <span>+974 1234 5678</span>
+                <FaWhatsapp className="w-5 h-5 mr-3 text-[#30bd82]" />
+                <span>
+                  <Link target='_blank' rel='noopener noreferrer' href={"https://wa.me/8801601508899"}>
+                    +880 1601-508899
+                  </Link>
+                </span>
               </div>
               <div className="flex items-center">
                 <Mail className="w-5 h-5 mr-3 text-[#30bd82]" />
-                <span>support@insurance.com</span>
+                <span>
+                  <Link target='_blank' rel='noopener noreferrer' href={"mailto:info@chhaya.life"}>
+                    info@chhaya.life
+                  </Link>
+                </span>
               </div>
               <div className="flex items-center">
                 <MapPin className="w-5 h-5 mr-3 text-[#30bd82]" />
-                <span>Doha, Qatar</span>
+                <span>Dhaka, Bangladesh</span>
               </div>
             </div>
           </div>
@@ -48,7 +58,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400">
-            © 2024 Bangladesh Expat Insurance. All rights reserved.
+            © {new Date().getFullYear()} Chhaya Technologies Limited. All rights reserved.
           </p>
         </div>
       </div>

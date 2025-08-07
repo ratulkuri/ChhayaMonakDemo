@@ -81,7 +81,8 @@ export default function PackageSelection({ onPackageSelect }) {
       'Life Insurance for primary holder',
       'Unlimited doctor consultations',
       'Health Insurance for family members',
-      'Health discounts'
+      // 'Health discounts'
+      'Exclusive discounts in healthcare partners'
     ];
     
     return coverage
@@ -253,7 +254,7 @@ export default function PackageSelection({ onPackageSelect }) {
             
             {/* Coverage Preview */}
             <div className="p-3 md:p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-semibold text-gray-900 mb-2 md:mb-3 text-center text-sm md:text-base">Your Coverage Includes:</h4>
+              <h4 className="font-semibold text-gray-900 mb-2 md:mb-3 text-sm md:text-base">Your Coverage Includes:</h4>
               <ul className="space-y-1 text-xs md:text-sm text-gray-600">
                 {generateCoverageList().map((item, index) => (
                   <li key={index} className="flex items-center">
