@@ -20,7 +20,7 @@ export default function PackageSelection({ onPackageSelect }) {
       id: 'couple-child',
       name: 'Couple + 1 Child',
       price: '$399',
-      popular: true,
+      popular: false,
       coverage: [
         'Life Insurance for primary holder',
         'Health Insurance for family',
@@ -33,7 +33,7 @@ export default function PackageSelection({ onPackageSelect }) {
       id: 'you-parents',
       name: 'You + Parents',
       price: '$449',
-      popular: false,
+      popular: true,
       coverage: [
         'Life Insurance for primary holder',
         'Health Insurance for parents',
@@ -73,7 +73,7 @@ export default function PackageSelection({ onPackageSelect }) {
           {packages.map((pkg) => (
             <div 
               key={pkg.id}
-              className={`bg-white rounded-lg shadow-lg p-6 relative ${
+              className={`bg-white rounded-lg shadow-lg p-6 relative flex flex-col ${
                 pkg.popular ? 'ring-2 ring-[#30bd82] transform scale-105' : ''
               }`}
             >
@@ -89,7 +89,7 @@ export default function PackageSelection({ onPackageSelect }) {
                 <p className="text-sm text-gray-600">per year</p>
               </div>
 
-              <ul className="space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 grow">
                 {pkg.coverage.map((item, index) => (
                   <li key={index} className="flex items-start">
                     <Check className="w-5 h-5 text-[#30bd82] mr-2 mt-0.5 flex-shrink-0" />

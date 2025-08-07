@@ -1,5 +1,6 @@
 import { Shield, Heart, Phone, Percent } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import Image from 'next/image'
 
 export default function HeroSection() {
   const scrollToPackages = () => {
@@ -30,8 +31,18 @@ export default function HeroSection() {
   ]
 
   return (
-    <section className="bg-gradient-to-br from-[#30bd82] to-[#28a574] text-white py-16 px-4">
-      <div className="max-w-6xl mx-auto text-center">
+    <section className="bg-gradient-to-br from-[#30bd82] to-[#28a574] text-white pb-16 px-4">
+        <div className="-mx-4">
+          <div className="logo flex justify-center mx-auto bg-white pt-5 pb-3 px-4 rounded-b-3xl mb-4">
+            <Image
+              src={"/logo.png"}
+              alt='chhaya'
+              width={189.4}
+              height={52}
+            />
+          </div>
+        </div>
+      <div className="max-w-6xl mx-auto text-center pt-8">
         <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
           Yearly Insurance Protection for You & Your Family in Bangladesh
         </h1>
@@ -51,7 +62,7 @@ export default function HeroSection() {
 
         <Button 
           onClick={scrollToPackages}
-          className="bg-[#f57a20] hover:bg-[#e56a10] text-white px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200"
+          className="bg-[#f57a20] hover:bg-[#e56a10] text-white h-auto px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200"
         >
           Get Protected for the Year
         </Button>

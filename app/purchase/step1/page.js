@@ -10,6 +10,10 @@ import { ArrowLeft, ArrowRight } from 'lucide-react'
 export default function Step1() {
   const router = useRouter()
   const [selectedPackage, setSelectedPackage] = useState(null)
+  // get dates of birth between 18 and 65 years
+  const today = new Date();
+  const minDate = new Date(today.getFullYear() - 65, today.getMonth(), today.getDate()).toISOString().split('T')[0];
+  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()).toISOString().split('T')[0];
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -51,6 +55,32 @@ export default function Step1() {
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
+
+  const validateDateOfBirth = (e) => {
+    const newErrors = {};
+    const value = e.target.value;
+
+    if (!value) {
+      newErrors.dateOfBirth = 'Date of birth is required';
+    } else {
+      const dob = new Date(value);
+      const today = new Date();
+
+      const age = today.getFullYear() - dob.getFullYear();
+      const monthDiff = today.getMonth() - dob.getMonth();
+      const dayDiff = today.getDate() - dob.getDate();
+
+      // Adjust age if birthday hasn't occurred yet this year
+      const actualAge = (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) ? age - 1 : age;
+
+      if (actualAge < 18 || actualAge > 65) {
+        newErrors.dateOfBirth = 'Age must be between 18 and 65 years';
+      }
+    }
+
+    setErrors(prevErrs => ({ ...prevErrs, ...newErrors }));
+  }
+
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -148,7 +178,10 @@ export default function Step1() {
                 type="date"
                 value={formData.dateOfBirth}
                 onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                onInput={validateDateOfBirth}
                 className={`mt-1 ${errors.dateOfBirth ? 'border-red-500' : ''}`}
+                min={minDate}
+                max={maxDate}
               />
               {errors.dateOfBirth && (
                 <p className="mt-1 text-sm text-red-600">{errors.dateOfBirth}</p>
@@ -157,7 +190,7 @@ export default function Step1() {
 
             <Button 
               type="submit"
-              className="w-full bg-[#30bd82] hover:bg-[#28a574] text-white py-3 font-semibold rounded-lg flex items-center justify-center"
+              className="w-full bg-[#30bd82] hover:bg-[#28a574] text-white py-3 font-semibold rounded-lg flex items-center justify-center cursor-pointer h-auto"
             >
               Continue to Payment
               <ArrowRight className="w-4 h-4 ml-2" />

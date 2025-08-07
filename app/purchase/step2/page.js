@@ -222,7 +222,7 @@ export default function Step2() {
             <Button 
               type="submit"
               disabled={isProcessing}
-              className="w-full bg-[#30bd82] hover:bg-[#28a574] text-white py-3 font-semibold rounded-lg flex items-center justify-center"
+              className="w-full bg-[#30bd82] hover:bg-[#28a574] text-white py-3 font-semibold rounded-lg flex items-center justify-center cursor-pointer h-auto"
             >
               {isProcessing ? (
                 <>
