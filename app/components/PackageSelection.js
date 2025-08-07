@@ -49,10 +49,9 @@ export default function PackageSelection({ onPackageSelect }) {
       popular: false,
       coverage: [
         'Life Insurance for primary holder',
-        'Health Insurance for all',
-        'Comprehensive family coverage',
+        'Health Insurance for family memebers',
         'Unlimited doctor consultations',
-        'Health & lifestyle discounts'
+        'Health discounts'
       ]
     }
   ]
@@ -62,10 +61,10 @@ export default function PackageSelection({ onPackageSelect }) {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Choose Your Protection Plan
+            Customize Your Plan
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Select the perfect insurance package for your family's needs
+            Create the perfect insurance package for your family's needs
           </p>
         </div>
 
@@ -74,7 +73,7 @@ export default function PackageSelection({ onPackageSelect }) {
             <div 
               key={pkg.id}
               className={`bg-white rounded-lg shadow-lg p-6 relative flex flex-col ${
-                pkg.popular ? 'ring-2 ring-[#30bd82] transform scale-105' : ''
+                pkg.popular ? 'ring-2 ring-[#30bd82] transform scale-105 mt-6 mb-4 lg:mt-0 lg:mb-0' : ''
               }`}
             >
               {pkg.popular && (

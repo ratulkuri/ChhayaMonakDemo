@@ -26,7 +26,7 @@ export default function HeroSection() {
     {
       icon: Percent,
       title: 'Health Discounts',
-      description: 'Exclusive discounts on healthcare and lifestyle'
+      description: 'Exclusive discounts in healthcare partners'
     }
   ]
 
@@ -44,10 +44,10 @@ export default function HeroSection() {
         </div>
       <div className="max-w-6xl mx-auto text-center pt-8">
         <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
-          Yearly Insurance Protection for You & Your Family in Bangladesh
+          Insurance Protection for You & Your Family
         </h1>
         <p className="text-lg md:text-xl mb-12 opacity-90 max-w-3xl mx-auto">
-          Comprehensive insurance coverage designed specifically for non-resident Bangladeshi expats and their families
+          Comprehensive insurance coverage designed specifically for non-resident Bangladeshis and their families
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -64,7 +64,7 @@ export default function HeroSection() {
           onClick={scrollToPackages}
           className="bg-[#f57a20] hover:bg-[#e56a10] text-white h-auto px-8 py-4 text-lg font-semibold rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200"
         >
-          Get Protected for the Year
+          Get Protection for Your Family
         </Button>
       </div>
     </section>

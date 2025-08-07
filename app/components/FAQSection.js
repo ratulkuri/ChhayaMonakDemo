@@ -9,44 +9,54 @@ export default function FAQSection() {
 
   const faqs = [
     {
-      id: 'eligibility',
-      question: 'Who is eligible for this insurance?',
-      answer: 'Non-resident Bangladeshi expats living in Qatar and their immediate family members (spouse, children, parents) are eligible for coverage.'
+        id: "faq-1",
+        question: "Who is eligible for this insurance package?",
+        answer: "Non-resident Bangladeshis living in Qatar are eligible as primary policyholders. The life insurance (Taka 2,00,000) covers only the primary expat policyholder, while health insurance benefits (hospitalization, ICU, maternity, accidental, ambulance coverage) are exclusively for the parents, spouse, and children of the primary policyholder."
     },
     {
-      id: 'documents',
-      question: 'What documents are required?',
-      answer: 'You need a valid passport, Qatar residence permit, proof of employment, and family relationship documents for dependents.'
+        id: "faq-2",
+        question: "What information do I need to provide during registration?",
+        answer: "After payment confirmation, you'll receive a login link to add your family members' information, such as their full name, age, and relationship, to activate their health insurance coverage."
     },
     {
-      id: 'claims',
-      question: 'How do I file a claim?',
-      answer: 'Claims can be filed through our mobile app, website, or by calling our 24/7 helpline. Most claims are processed within 48-72 hours.'
+        id: "faq-3",
+        question: "What documents do I need to provide during a claim?",
+        answer: "For claims, you'll need to provide relationship documents (birth certificates for children, marriage certificate for spouse), along with proper medical documents like doctor's prescription, hospital discharge letter, medical bills, and receipts."
     },
     {
-      id: 'consultation',
-      question: 'How does doctor consultation work?',
-      answer: 'Access unlimited video consultations through our app. Connect with licensed doctors 24/7 for medical advice and prescriptions.'
+        id: "faq-4",
+        question: "What specific health coverage is included for my family?",
+        answer: "Your family receives comprehensive health coverage, including: Hospitalization (Taka 4,000 per night), ICU Coverage (Taka 8,000 per night), Maternity Coverage for spouse only (Taka 20,000 for C-section/normal delivery), Accidental Coverage (Taka 25,000), and Ambulance Transfer Coverage (Taka 2,000). These benefits apply to spouse, parents, and children only."
     },
     {
-      id: 'cancellation',
-      question: 'Can I cancel my policy?',
-      answer: 'Yes, you can cancel within 30 days for a full refund. After 30 days, cancellation terms apply based on your policy conditions.'
+        id: "faq-5",
+        question: "How do I consult with doctors?",
+        answer: "Access unlimited video consultations with licensed doctors 24/7 through our platform. This service is available to all covered family members and includes prescription services when needed."
     },
     {
-      id: 'age-limits',
-      question: 'Are there age limits?',
-      answer: 'Primary holder: 18-65 years, Spouse: 18-65 years, Children: 0-25 years, Parents: up to 75 years at policy inception.'
+        id: "faq-6",
+        question: "What health discounts do I get?",
+        answer: "Enjoy up to 40% savings on bills at partner hospitals and up to 10% savings at partner pharmacies."
     },
     {
-      id: 'activation',
-      question: 'When does coverage start?',
-      answer: 'Coverage begins 24 hours after payment confirmation. Emergency services are available immediately upon activation.'
+        id: "faq-7",
+        question: "How quickly does my coverage become active?",
+        answer: "Life insurance coverage for the primary policyholder begins immediately after payment confirmation. Health insurance for family members activates once you log in and add their information to your account through the email link provided after purchase."
     },
     {
-      id: 'payment',
-      question: 'What payment methods are accepted?',
-      answer: 'We accept all major credit cards, debit cards, and bank transfers. Payment is processed securely through our encrypted platform.'
+        id: "faq-8",
+        question: "What are the age limits for coverage?",
+        answer: "Primary policyholder (expat): 18-60 years for life insurance. For health coverage: spouse 18-60 years, children newborn-18 years, parents up to age 60 at policy inception if included in the selected package."
+    },
+    {
+        id: "faq-9",
+        question: "How do I file a claim?",
+        answer: "Claims can be filed through our website or by calling our 24/7 Bangladesh helpline. Submit required medical documents and receipts. Most claims are processed and paid within 7-14 working days directly to your designated Bangladeshi bank or bKash account."
+    },
+    {
+        id: "faq-10",
+        question: "What payment methods do you accept?",
+        answer: "We accept all major credit cards and debit cards. All payments are processed through our PCI-compliant, encrypted platform for maximum security. Payment is charged annually for your selected package."
     }
   ]
 
@@ -74,7 +84,7 @@ export default function FAQSection() {
             <Collapsible key={faq.id}>
               <CollapsibleTrigger 
                 onClick={() => toggleItem(faq.id)}
-                className="w-full bg-white rounded-lg p-6 flex items-center justify-between hover:shadow-md transition-shadow duration-200 text-left"
+                className="w-full bg-white rounded-lg p-6 flex items-center justify-between hover:shadow-md [data-sate=true]:rounded-b-none transition-shadow duration-200 text-left"
               >
                 <h3 className="text-lg font-semibold text-gray-900 pr-4">{faq.question}</h3>
                 {openItems[faq.id] ? (

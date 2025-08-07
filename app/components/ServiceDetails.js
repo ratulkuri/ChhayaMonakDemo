@@ -13,42 +13,42 @@ export default function ServiceDetails() {
       icon: Shield,
       title: 'Life Insurance',
       description: 'Comprehensive life coverage for primary policy holder with competitive benefits',
-      details: 'Coverage up to $50,000 with accidental death benefits and terminal illness coverage'
+      details: 'Coverage up to 200,000 BDT with accidental death benefits and terminal illness coverage'
     },
     {
       id: 'health',
       icon: Heart,
       title: 'Health Insurance',
-      description: 'Complete healthcare coverage including hospitalization, ICU, and maternity',
-      details: 'Covers hospitalization up to $25,000, ICU coverage, maternity benefits for spouse, and emergency medical expenses'
+      description: 'Complete healthcare coverage including hospitalization, and ICU',
+      details: 'Covers up to 4,000 BDT per night for hospitalization and up to 8,000 BDT per night for ICU stay'
     },
     {
       id: 'consultation',
       icon: Phone,
       title: 'Doctor Consultation',
       description: 'Unlimited video consultations with qualified doctors 24/7',
-      details: 'Access to licensed doctors, specialists, and healthcare professionals anytime, anywhere'
+      details: 'Access to licensed doctors, and healthcare professionals anytime, anywhere'
     },
     {
       id: 'ambulance',
       icon: Car,
-      title: 'Emergency Services',
-      description: 'Ambulance and emergency medical transportation coverage',
-      details: 'Emergency ambulance services, medical evacuation, and transportation to nearest medical facility'
+      title: 'Emergency & Accidental Coverage',
+      description: 'Coverage for emergency medical transportation and accidents',
+      details: 'Ambulance transfer coverage of up to 2,000 BDT and accidental coverage of up to 25,000 BDT.'
     },
     {
       id: 'maternity',
       icon: Baby,
       title: 'Maternity Coverage',
-      description: 'Comprehensive maternity and newborn care coverage',
-      details: 'Pre and post-natal care, delivery expenses, newborn coverage for first 30 days'
+      description: 'Comprehensive Maternity Care Coverage',
+      details: 'Up to 20,000 BDT coverage for C-section or normal delivery'
     },
     {
       id: 'discounts',
       icon: Percent,
-      title: 'Health & Lifestyle Discounts',
-      description: 'Exclusive discounts on healthcare, pharmacy, and lifestyle services',
-      details: 'Up to 30% discounts on hospitals, pharmacies, baby products, entertainment, and shopping'
+      title: 'Health Discounts',
+      description: 'Exclusive discounts in healthcare partners, and pharmacy',
+      details: 'Up to 40% discounts on hospitals, and up to 10% on pharmacies'
     }
   ]
 
