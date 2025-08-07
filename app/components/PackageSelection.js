@@ -100,7 +100,7 @@ export default function PackageSelection({ onPackageSelect }) {
 
               <Button 
                 onClick={() => onPackageSelect(pkg)}
-                className={`w-full py-3 font-semibold rounded-lg transition-all duration-200 ${
+                className={`w-full py-3 font-semibold rounded-lg transition-all duration-200 cursor-pointer ${
                   pkg.popular 
                     ? 'bg-[#30bd82] hover:bg-[#28a574] text-white' 
                     : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
