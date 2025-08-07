@@ -105,7 +105,7 @@ export default function Step2() {
             <Button 
               variant="ghost" 
               onClick={() => router.push('/purchase/step1')}
-              className="flex items-center text-gray-600 ps-0"
+              className="flex items-center text-gray-600 ps-0 cursor-pointer hover:bg-transparent"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
@@ -129,6 +129,38 @@ export default function Step2() {
               <span className="text-gray-600">Customer:</span>
               <span className="font-semibold">{userInfo.fullName}</span>
             </div>
+            
+            {/* Show breakdown for custom packages */}
+            {selectedPackage.selections && (
+              <div className="border-t pt-3">
+                <h4 className="font-medium text-gray-900 mb-2">Coverage Breakdown:</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Base Coverage:</span>
+                    <span>৳20,000</span>
+                  </div>
+                  {selectedPackage.selections.spouse && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Spouse Coverage:</span>
+                      <span>৳5,000</span>
+                    </div>
+                  )}
+                  {selectedPackage.selections.children && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">{selectedPackage.selections.children} Child{selectedPackage.selections.children > 1 ? 'ren' : ''}:</span>
+                      <span>৳{(parseInt(selectedPackage.selections.children) * 3000).toLocaleString()}</span>
+                    </div>
+                  )}
+                  {selectedPackage.selections.parents && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">{selectedPackage.selections.parents === '1' ? '1 Parent' : 'Both Parents'}:</span>
+                      <span>৳{(parseInt(selectedPackage.selections.parents) * 10000).toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            
             <div className="border-t pt-3 flex justify-between">
               <span className="text-lg font-semibold">Total:</span>
               <span className="text-2xl font-bold text-[#30bd82]">{selectedPackage.price}</span>
@@ -137,7 +169,7 @@ export default function Step2() {
         </div>
 
         {/* Payment Form */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white border border-[#30bd82] rounded-lg shadow-sm p-6">
           <div className="flex items-center mb-6">
             <Shield className="w-5 h-5 text-[#30bd82] mr-2" />
             <span className="text-sm text-gray-600">Your payment information is secure and encrypted</span>
@@ -153,7 +185,7 @@ export default function Step2() {
                 type="text"
                 value={paymentData.cardNumber}
                 onChange={(e) => handleInputChange('cardNumber', e.target.value)}
-                className={`mt-1 ${errors.cardNumber ? 'border-red-500' : ''}`}
+                className={`mt-1 h-12 ${errors.cardNumber ? 'border-red-500' : ''}`}
                 placeholder="1234 5678 9012 3456"
               />
               {errors.cardNumber && (
@@ -171,7 +203,7 @@ export default function Step2() {
                   type="text"
                   value={paymentData.expiryDate}
                   onChange={(e) => handleInputChange('expiryDate', e.target.value)}
-                  className={`mt-1 ${errors.expiryDate ? 'border-red-500' : ''}`}
+                  className={`mt-1 h-12 ${errors.expiryDate ? 'border-red-500' : ''}`}
                   placeholder="MM/YY"
                 />
                 {errors.expiryDate && (
@@ -188,7 +220,7 @@ export default function Step2() {
                   type="text"
                   value={paymentData.cvv}
                   onChange={(e) => handleInputChange('cvv', e.target.value)}
-                  className={`mt-1 ${errors.cvv ? 'border-red-500' : ''}`}
+                  className={`mt-1 h-12 ${errors.cvv ? 'border-red-500' : ''}`}
                   placeholder="123"
                 />
                 {errors.cvv && (
@@ -206,7 +238,7 @@ export default function Step2() {
                 type="text"
                 value={paymentData.cardholderName}
                 onChange={(e) => handleInputChange('cardholderName', e.target.value)}
-                className={`mt-1 ${errors.cardholderName ? 'border-red-500' : ''}`}
+                className={`mt-1 h-12 ${errors.cardholderName ? 'border-red-500' : ''}`}
                 placeholder="Name as it appears on card"
               />
               {errors.cardholderName && (
@@ -222,7 +254,7 @@ export default function Step2() {
             <Button 
               type="submit"
               disabled={isProcessing}
-              className="w-full bg-[#30bd82] hover:bg-[#28a574] text-white py-3 font-semibold rounded-lg flex items-center justify-center cursor-pointer h-auto"
+              className="w-full h-auto cursor-pointer bg-[#30bd82] hover:bg-[#28a574] text-white py-3 font-semibold rounded-lg flex items-center justify-center"
             >
               {isProcessing ? (
                 <>

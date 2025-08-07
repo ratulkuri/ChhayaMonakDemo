@@ -153,13 +153,13 @@ export default function Confirmation() {
         <div className="flex flex-col sm:flex-row gap-4">
           <Button 
             onClick={handleNewPurchase}
-            className="flex-1 bg-[#30bd82] hover:bg-[#28a574] text-white py-3 font-semibold rounded-lg"
+            className="flex-1 h-auto bg-[#30bd82] hover:bg-[#28a574] text-white py-3 font-semibold rounded-lg"
           >
             Purchase Another Plan
           </Button>
           <Button 
             variant="outline"
-            className="flex-1 border-[#30bd82] text-[#30bd82] hover:bg-[#30bd82] hover:text-white py-3 font-semibold rounded-lg flex items-center justify-center"
+            className="flex-1 h-auto border-[#30bd82] text-[#30bd82] hover:bg-[#30bd82] hover:text-white py-3 font-semibold rounded-lg flex items-center justify-center"
           >
             <Download className="w-4 h-4 mr-2" />
             Download Receipt
