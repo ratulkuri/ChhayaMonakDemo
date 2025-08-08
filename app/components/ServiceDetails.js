@@ -92,8 +92,8 @@ export default function ServiceDetails() {
                 className="w-full bg-gray-50 rounded-lg p-4 flex items-center justify-between hover:bg-gray-100 transition-colors duration-200"
               >
                 <div className="flex items-center">
-                  <service.icon className="w-8 h-8 text-[#30bd82] mr-3" />
-                  <h3 className="text-lg font-semibold text-gray-900">{service.title}</h3>
+                  <service.icon className="w-8 h-8 text-[#30bd82] mr-3 shrink-0" />
+                  <h3 className="text-left text-lg font-semibold text-gray-900">{service.title}</h3>
                 </div>
                 {openItems[service.id] ? (
                   <ChevronUp className="w-5 h-5 text-gray-500" />
