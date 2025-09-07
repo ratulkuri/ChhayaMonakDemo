@@ -148,13 +148,13 @@ export default function Step2() {
                   {selectedPackage.selections.children && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">{selectedPackage.selections.children} Child{selectedPackage.selections.children > 1 ? 'ren' : ''}:</span>
-                      <span>৳{(parseInt(selectedPackage.selections.children) * 3000).toLocaleString()}</span>
+                      <span>${(parseInt(selectedPackage.selections.children) * 3000).toLocaleString()}</span>
                     </div>
                   )}
                   {selectedPackage.selections.parents && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">{selectedPackage.selections.parents === '1' ? '1 Parent' : 'Both Parents'}:</span>
-                      <span>৳{(parseInt(selectedPackage.selections.parents) * 10000).toLocaleString()}</span>
+                      <span>${(parseInt(selectedPackage.selections.parents) * 10000).toLocaleString()}</span>
                     </div>
                   )}
                 </div>
