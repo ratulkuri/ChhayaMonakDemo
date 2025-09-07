@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import SelectedPackageCardSkeleton from "../Skeletons/SelectedPackageCardSkeleton";
 import SelectedOptionsCardSkeleton from "../Skeletons/SelectedOptionsCardSkeleton";
+import { createOrderAction } from "@/actions/createOrderAction";
 
 function computeDateBounds() {
   const today = new Date();
@@ -66,6 +67,28 @@ function StepOne({ action }) {
   // Link server action to state for handling non-redirect failures
   const [serverState, formAction, isPending] = useActionState(action, null);
 
+  // Client-side validation rules
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const bdPhonePattern = /^(?:\+?88)?01[3-9]\d{8}$/;
+
+  const onValid = () => {
+    // Submit the native form so Server Action receives FormData (including hidden packageJson)
+    // This avoids extra state updates and keeps re-renders minimal
+    formRef.current?.requestSubmit();
+  };
+
+  const onSubmit = async (data) => {
+    const formData = new FormData(formRef.current);
+    // console.log(formData)
+    const result = await createOrderAction(formData); // <-- use action directly, not useActionState
+    if (result?.ok === false && result.fieldErrors) {
+      Object.entries(result.fieldErrors).forEach(([name, message]) => {
+        setError(name, { type: "server", message: String(message) });
+      });
+    }
+  };
+
+  
   // If serverAction returned an error object (no redirect), reflect it in RHF
   useEffect(() => {
     if (serverState?.ok === false) {
@@ -77,15 +100,6 @@ function StepOne({ action }) {
     }
   }, [serverState, setError]);
 
-  // Client-side validation rules
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const bdPhonePattern = /^(?:\+?88)?01[3-9]\d{8}$/;
-
-  const onValid = () => {
-    // Submit the native form so Server Action receives FormData (including hidden packageJson)
-    // This avoids extra state updates and keeps re-renders minimal
-    formRef.current?.requestSubmit();
-  };
 
   return (
     <div>
@@ -158,8 +172,9 @@ function StepOne({ action }) {
       <div className="bg-white border border-[#30bd82] rounded-lg shadow-sm p-6">
         <form
           ref={formRef}
-          action={formAction}
-          onSubmit={handleSubmit(onValid)}
+          // action={formAction}
+          // onSubmit={handleSubmit(onValid)}
+          onSubmit={handleSubmit(onSubmit)}
           className="space-y-6"
         >
           {/* Hidden selected package for the server action */}

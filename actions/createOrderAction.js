@@ -3,8 +3,14 @@
 // import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-export async function createOrderAction(prevState, formData) {
+export async function createOrderAction(formData) {
   // Extract and basic sanitize
+  // const formDatad = new FormData();
+  // console.log(formData);
+  // formData?.forEach(item => {console.log(item)});
+
+  // return
+
   const fullName = (formData.get("fullName") || "").toString().trim();
   const email = (formData.get("email") || "").toString().trim();
   const phone = (formData.get("phone") || "").toString().trim();
@@ -38,6 +44,28 @@ export async function createOrderAction(prevState, formData) {
     };
   }
 
+  // Build family relation flags
+  // Convert date: "1995-05-04" → "1995-5-4"
+  const dob = new Date(dateOfBirth);
+  const dobFormatted = `${dob.getFullYear()}-${dob.getMonth() + 1}-${dob.getDate()}`;
+
+  const relationKeys = ["spouse_1","spouse_2","child_1","child_2","child_3","parent_1","parent_2"];
+  const relationFlags = relationKeys.reduce((acc, key) => {
+    acc[key] = !!selectedPackage.relations?.some(r => r.relation === key);
+    return acc;
+  }, {});
+
+  const payload = {
+    name: fullName,
+    phone: phone,
+    dob: dobFormatted,
+    email: email,
+    package: selectedPackage?.id,
+    ...relationFlags
+  };
+
+  // console.log(payload);
+
   // Prepare API base (prefer server-only env var)
   const API_BASE =
     process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -51,14 +79,7 @@ export async function createOrderAction(prevState, formData) {
       },
       // Include any auth/trace cookies if your API needs them
       // credentials: "include", // not supported in node fetch; pass tokens explicitly if required
-      body: JSON.stringify({
-        fullName,
-        email,
-        phone,
-        dateOfBirth,
-        packageId: selectedPackage.id,
-        selectedPackage,
-      }),
+      body: JSON.stringify(payload),
       // Optionally, configure timeouts with AbortController (omitted for brevity)
     });
 

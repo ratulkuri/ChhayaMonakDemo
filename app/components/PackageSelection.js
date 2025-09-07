@@ -32,59 +32,53 @@ export default function PackageSelection({ packagePrice = null }) {
     // Store in localStorage for purchase flow
     localStorage.setItem('selectedPackage', JSON.stringify(packageData))
     router.push('/purchase/step1')
-    }
+  }
 
   // Calculate total price whenever selections change
   useEffect(() => {
-    let price = 100; // baseprice
+    let price = 0;
 
     if (packagePrice) {
-      // Use values from packagePrice object
-      price += packagePrice.id ? 0 : 0; // base not included in object, keep 0
+      // Get base price (1 person pricing if available)
+      const basePricing = packagePrice.family_pricing?.find(
+        (p) => p.number_of_people === "1"
+      );
+      if (basePricing?.price) {
+        price += parseInt(basePricing.price, 10);
+      }
 
+      // Add spouse
       if (selections.spouse) {
-        price += packagePrice.spouse_1 ?? 0;
-        if (selections.spouse === '2') {
-          price += packagePrice.spouse_2 ?? 0;
-        }
+        const spouse1 = packagePrice.family_coverages?.find(c => c.relation === "spouse_1");
+        price += spouse1?.price ?? 0;
       }
 
+      // Children
       if (selections.children) {
-        const count = parseInt(selections.children);
+        const count = parseInt(selections.children, 10);
         for (let i = 1; i <= count; i++) {
-          price += packagePrice[`child_${i}`] ?? 0;
+          const child = packagePrice.family_coverages?.find(c => c.relation === `child_${i}`);
+          price += child?.price ?? 0;
         }
       }
 
+      // Parents
       if (selections.parents) {
-        const count = parseInt(selections.parents);
+        const count = parseInt(selections.parents, 10);
         for (let i = 1; i <= count; i++) {
-          price += packagePrice[`parent_${i}`] ?? 0;
+          const parent = packagePrice.family_coverages?.find(c => c.relation === `parent_${i}`);
+          price += parent?.price ?? 0;
         }
       }
-    // } else {
-    //   // Fallback: old static constants
-    //   price += BASE_PRICE;
-
-    //   if (selections.spouse) {
-    //     price += SPOUSE_PRICE;
-    //   }
-
-    //   if (selections.children) {
-    //     price += parseInt(selections.children) * CHILD_PRICE;
-    //   }
-
-    //   if (selections.parents) {
-    //     price += parseInt(selections.parents) * PARENT_PRICE;
-    //   }
     }
 
     setTotalPrice(price);
 
-    // Check if at least one option is selected
+    // At least one member selected
     const hasSelection = selections.spouse || selections.children || selections.parents;
     setIsValidSelection(hasSelection);
   }, [selections, packagePrice]);
+
 
 
   const handleSpouseChange = () => {
@@ -106,18 +100,52 @@ export default function PackageSelection({ packagePrice = null }) {
   }
 
   const handleProceed = () => {
-    if (!isValidSelection) return
+    if (!isValidSelection) return;
+
+    // Build selected relations list with prices
+    let selectedRelations = [];
+
+    if (selections.spouse) {
+      const spouse1 = packagePrice.family_coverages?.find(c => c.relation === "spouse_1");
+      if (spouse1) selectedRelations.push({ relation: spouse1.relation, price: spouse1.price });
+    }
+
+    if (selections.children) {
+      const count = parseInt(selections.children, 10);
+      for (let i = 1; i <= count; i++) {
+        const child = packagePrice.family_coverages?.find(c => c.relation === `child_${i}`);
+        if (child) selectedRelations.push({ relation: child.relation, price: child.price });
+      }
+    }
+
+    if (selections.parents) {
+      const count = parseInt(selections.parents, 10);
+      for (let i = 1; i <= count; i++) {
+        const parent = packagePrice.family_coverages?.find(c => c.relation === `parent_${i}`);
+        if (parent) selectedRelations.push({ relation: parent.relation, price: parent.price });
+      }
+    }
+
+    // Extract base price once (constant)
+    const basePricing = packagePrice.family_pricing?.find(
+      (p) => p.number_of_people === "1"
+    );
+    const basePrice = basePricing ? parseInt(basePricing.price, 10) : 0;
 
     const packageData = {
-      id: 'custom',
-      name: 'Custom Family Plan',
-      price: `$${totalPrice.toLocaleString()}`,
-      selections: selections,
-      coverage: generateCoverageList()
-    }
-    
-    handlePackageSelect(packageData)
-  }
+      id: packagePrice?.id,
+      name: packagePrice?.title,
+      basePrice,                       // NEW: keep base price separate
+      totalPrice,                      // NEW: store total number (not just string)
+      price: `$${totalPrice.toLocaleString()}`, 
+      selections,                      // UI state reference
+      relations: selectedRelations,    // detailed member breakdown
+      coverage: generateCoverageList(),
+    };
+
+    handlePackageSelect(packageData);
+  };
+
 
   const generateCoverageList = () => {
     const coverage = [
