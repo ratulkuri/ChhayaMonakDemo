@@ -64,7 +64,7 @@ export async function createOrderAction(formData) {
     ...relationFlags
   };
 
-  // console.log(payload);
+  console.log({payload, relations: selectedPackage?.relations});
 
   // Prepare API base (prefer server-only env var)
   const API_BASE =
@@ -76,6 +76,7 @@ export async function createOrderAction(formData) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-signature": process?.env?.X_SIGNATURE
       },
       // Include any auth/trace cookies if your API needs them
       // credentials: "include", // not supported in node fetch; pass tokens explicitly if required
@@ -83,10 +84,12 @@ export async function createOrderAction(formData) {
       // Optionally, configure timeouts with AbortController (omitted for brevity)
     });
 
+    // console.log({purchaseRes});
     if (!purchaseRes.ok) {
       let problem = "Unable to create order.";
       try {
         const j = await purchaseRes.json();
+        console.log({purchaseRes: j});
         problem = j?.message || problem;
       } catch (_) {}
       return { ok: false, message: problem };

@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import NextTopLoader from 'nextjs-toploader'
+import { Toaster } from '@/components/ui/sonner'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,6 +32,7 @@ export default function RootLayout({ children }) {
           showAtBottom={false}
         />
         {children}
+        <Toaster position="top-center" closeButton richColors />
       </body>
     </html>
   )

@@ -10,6 +10,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import SelectedPackageCardSkeleton from "../Skeletons/SelectedPackageCardSkeleton";
 import SelectedOptionsCardSkeleton from "../Skeletons/SelectedOptionsCardSkeleton";
 import { createOrderAction } from "@/actions/createOrderAction";
+import { toast } from "sonner";
 
 function computeDateBounds() {
   const today = new Date();
@@ -78,13 +79,29 @@ function StepOne({ action }) {
   };
 
   const onSubmit = async (data) => {
+    // Clear previous server errors
+    clearErrors();
+
     const formData = new FormData(formRef.current);
-    // console.log(formData)
-    const result = await createOrderAction(formData); // <-- use action directly, not useActionState
-    if (result?.ok === false && result.fieldErrors) {
-      Object.entries(result.fieldErrors).forEach(([name, message]) => {
-        setError(name, { type: "server", message: String(message) });
-      });
+
+    // Call server action
+    const result = await createOrderAction(formData);
+
+    if (result?.ok === false) {
+      // Map server field errors
+      if (result.fieldErrors) {
+        Object.entries(result.fieldErrors).forEach(([name, message]) => {
+          setError(name, { type: "server", message: String(message) });
+        });
+      }
+
+      // Show general server message
+      if (result.message) {
+        // setError("server", { type: "server", message: result.message });
+        toast.error("Error", {
+          description: result.message ?? "Something went wrong!"
+        });
+      }
     }
   };
 
@@ -276,6 +293,12 @@ function StepOne({ action }) {
           {serverState?.ok === false && serverState?.message && (
             <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3">
               {serverState.message}
+            </div>
+          )}
+
+          {errors.server && (
+            <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3">
+              {errors.server.message}
             </div>
           )}
 
