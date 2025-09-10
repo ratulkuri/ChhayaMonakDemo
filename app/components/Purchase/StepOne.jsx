@@ -1,16 +1,17 @@
 "use client";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useActionState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader, LoaderCircle } from "lucide-react";
 import SelectedPackageCardSkeleton from "../Skeletons/SelectedPackageCardSkeleton";
 import SelectedOptionsCardSkeleton from "../Skeletons/SelectedOptionsCardSkeleton";
 import { createOrderAction } from "@/actions/createOrderAction";
 import { toast } from "sonner";
+import { checkPhoneAction } from "@/actions/checkPhoneAction";
 
 function computeDateBounds() {
   const today = new Date();
@@ -31,7 +32,13 @@ function computeDateBounds() {
   return { min, max };
 }
 
+
+// Client-side validation rules
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const bdPhonePattern = /^(?:\+?88)?01[3-9]\d{8}$/;
+
 function StepOne({ action }) {
+  const [phoneChecking, setPhoneChecking] = useState(false);
   const router = useRouter();
   const formRef = useRef(null);
 
@@ -41,26 +48,15 @@ function StepOne({ action }) {
     handleSubmit,
     setError,
     clearErrors,
-    formState: { errors, isSubmitting },
+    control,
+    formState: { errors, isSubmitting, isValid },
   } = useForm({
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: { fullName: "", email: "", phone: "", dateOfBirth: "" },
   });
 
   // Selected package from localStorage (client-only)
   const selectedPackageRef = useRef(null);
-  useEffect(() => {
-    const pkgRaw = localStorage.getItem("selectedPackage");
-    if (!pkgRaw) {
-      router.push("/");
-      return;
-    }
-    try {
-      selectedPackageRef.current = JSON.parse(pkgRaw);
-    } catch {
-      router.push("/");
-    }
-  }, [router]);
 
   // Compute date bounds once
   const { min, max } = useMemo(() => computeDateBounds(), []);
@@ -68,15 +64,38 @@ function StepOne({ action }) {
   // Link server action to state for handling non-redirect failures
   const [serverState, formAction, isPending] = useActionState(action, null);
 
-  // Client-side validation rules
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const bdPhonePattern = /^(?:\+?88)?01[3-9]\d{8}$/;
+  // const onPhoneCheck = async (value) => {
+  //   const phone  = value?.length < 11 ? '0'+value : value;
+  //   const phoneWithCountryCode  = value?.length < 11 ? '+880'+value : value;
+  //   if (!phone) return "Phone is required";
 
-  const onValid = () => {
-    // Submit the native form so Server Action receives FormData (including hidden packageJson)
-    // This avoids extra state updates and keeps re-renders minimal
-    formRef.current?.requestSubmit();
-  };
+  //   if (!bdPhonePattern.test(phoneWithCountryCode)) return "Invalid Bangladeshi phone";
+
+  //   setPhoneChecking(true); // 🔄 start loading
+
+  //   try {
+  //     const result = await checkPhoneAction(phone);
+
+  //     if (!result?.ok) {
+  //       return result?.message || "Validation failed";
+  //     }
+  //     if (result?.exists) {
+  //       return "This phone number is already registered";
+  //     }
+
+  //     return true;
+  //   } catch (error) {
+  //     return "Unable to validate phone. Please try again.";
+  //   } finally {
+  //     setPhoneChecking(false); // ✅ stop loading
+  //   }
+  // };
+
+  // const onValid = () => {
+  //   // Submit the native form so Server Action receives FormData (including hidden packageJson)
+  //   // This avoids extra state updates and keeps re-renders minimal
+  //   formRef.current?.requestSubmit();
+  // };
 
   const onSubmit = async (data) => {
     // Clear previous server errors
@@ -105,6 +124,72 @@ function StepOne({ action }) {
     }
   };
 
+  // Watch phone input only (user types without +880)
+  const phoneValue = useWatch({ control, name: "phone" });
+
+  useEffect(() => {
+    if (!phoneValue) return;
+
+    // Prepend +880 to validate
+    const phone = `0${phoneValue}`;
+    const phoneWithCountryCode = `+880${phoneValue}`;
+
+    // Regex for full BD phone (+8801XXXXXXXXX)
+    // const bdPhonePattern = /^\+8801[3-9]\d{8}$/;
+
+    if (!bdPhonePattern.test(phoneWithCountryCode)) {
+      setError("phone", { type: "pattern", message: "Invalid Bangladeshi phone" });
+      return;
+    }
+
+    let isCancelled = false;
+
+    const checkPhone = async () => {
+      setPhoneChecking(true);
+      try {
+        const result = await checkPhoneAction(phone); // ✅ send full number
+        if (!isCancelled) {
+          if (result?.exists) {
+            setError("phone", {
+              type: "server",
+              message: "This phone number is already registered",
+            });
+          } else {
+            clearErrors("phone");
+          }
+        }
+      } catch {
+        if (!isCancelled) {
+          setError("phone", {
+            type: "server",
+            message: "Unable to validate phone. Try again.",
+          });
+        }
+      } finally {
+        if (!isCancelled) setPhoneChecking(false);
+      }
+    };
+
+    checkPhone();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [phoneValue, setError, clearErrors]);
+
+  
+  useEffect(() => {
+    const pkgRaw = localStorage.getItem("selectedPackage");
+    if (!pkgRaw) {
+      router.push("/");
+      return;
+    }
+    try {
+      selectedPackageRef.current = JSON.parse(pkgRaw);
+    } catch {
+      router.push("/");
+    }
+  }, [router]);
   
   // If serverAction returned an error object (no redirect), reflect it in RHF
   useEffect(() => {
@@ -204,7 +289,7 @@ function StepOne({ action }) {
 
           <div>
             <Label htmlFor="fullName" className="text-sm font-medium">
-              Full Name *
+              Full Name <span className="text-destructive">*</span>
             </Label>
             <Input
               id="fullName"
@@ -221,7 +306,7 @@ function StepOne({ action }) {
 
           <div>
             <Label htmlFor="email" className="text-sm font-medium">
-              Email Address *
+              Email Address <span className="text-destructive">*</span>
             </Label>
             <Input
               id="email"
@@ -241,27 +326,60 @@ function StepOne({ action }) {
 
           <div>
             <Label htmlFor="phone" className="text-sm font-medium">
-              Phone *
+              Phone <span className="text-destructive">*</span>
             </Label>
-            <Input
+            {/* <Input
               id="phone"
               type="tel"
               placeholder="Enter a Bangladeshi phone number"
               aria-invalid={errors.phone ? "true" : "false"}
               {...register("phone", {
                 required: "Phone is required",
-                pattern: { value: bdPhonePattern, message: "Invalid Bangladeshi phone" },
+                // pattern: { value: bdPhonePattern, message: "Invalid Bangladeshi phone" },
+                validate: onPhoneCheck,
               })}
               className={`w-full mt-1 h-12 bg-white ${errors.phone ? "border-red-500" : ""}`}
             />
             {errors.phone && (
               <p className="mt-1 text-sm text-red-600">{String(errors.phone.message)}</p>
-            )}
+            )} */}
+            <div className="relative">
+                {/* Prefix */}
+                <span className="absolute inset-y-0 h-12 left-0 flex items-center pl-3 text-gray-600 font-medium">
+                  +880
+                </span>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="1XXXXXXXXX"
+                  aria-invalid={errors.phone ? "true" : "false"}
+                  disabled={phoneChecking}
+                  {...register("phone", { required: "Phone is required" })}
+                  className={`w-full mt-1 h-12 bg-white text-gray-600 pl-16 pr-10 !text-base font-medium ${
+                    errors.phone ? "border-red-500" : ""
+                  }`}
+                  onInput={(e) => {
+                    // allow only digits, max 10
+                    e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "").slice(0, 10);
+                  }}
+                />
+
+              {/* Spinner inside input */}
+              {phoneChecking && (
+                <div className="absolute inset-y-0 right-3 flex items-center h-12">
+                  <Loader className="animate-spin" />
+                </div>
+              )}
+
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600">{String(errors.phone.message)}</p>
+              )}
+            </div>
           </div>
 
           <div>
             <Label htmlFor="dateOfBirth" className="text-sm font-medium">
-              Date of Birth *
+              Date of Birth <span className="text-destructive">*</span>
             </Label>
             <Input
               id="dateOfBirth"
@@ -302,9 +420,15 @@ function StepOne({ action }) {
             </div>
           )}
 
+          {autoFillNote && (
+            <div className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded p-3">
+              {autoFillNote}
+            </div>
+          )}
+
           <Button
             type="submit"
-            disabled={isSubmitting || isPending}
+            disabled={!isValid || isSubmitting || isPending || phoneChecking}
             className="w-full h-auto cursor-pointer bg-[#30bd82] hover:bg-[#28a574] text-white py-3 font-semibold rounded-lg flex items-center justify-center"
           >
             {isSubmitting || isPending ? (

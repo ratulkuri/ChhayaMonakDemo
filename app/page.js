@@ -5,8 +5,8 @@ import FAQSection from './components/FAQSection'
 import Footer from './components/Footer'
 
 export default async function HomePage() {
-  console.log('process.env.API_BASE_URL => ', process.env.API_BASE_URL);
-  const packagePricesFetcher = fetch(`${process.env.API_BASE_URL}/get-products`, {
+  const API_BASE = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "";
+  const packagePricesFetcher = fetch(`${API_BASE}/get-products`, {
     method: "GET",
     headers: {
       'x-signature': process.env.X_SIGNATURE ?? ""
