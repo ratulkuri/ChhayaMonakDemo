@@ -20,9 +20,8 @@ export async function checkPhoneAction(phone) {
     }
 
     const data = await res.json();
-    const exists = data === 1;
 
-    return { ok: true, exists };
+    return { ok: true, exists: data?.exists, user: data?.user };
   } catch (err) {
     return { ok: false, message: err.message || "Phone check failed" };
   }
