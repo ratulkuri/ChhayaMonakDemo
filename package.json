@@ -19,6 +19,7 @@
     "@radix-ui/react-visually-hidden": "^1.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "input-otp": "^1.4.2",
     "lucide-react": "^0.536.0",
     "motion": "^12.23.12",
     "next": "15.4.5",

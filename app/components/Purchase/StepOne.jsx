@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ArrowRight, Loader, LoaderCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader } from "lucide-react";
 import SelectedPackageCardSkeleton from "../Skeletons/SelectedPackageCardSkeleton";
 import SelectedOptionsCardSkeleton from "../Skeletons/SelectedOptionsCardSkeleton";
 import { createOrderAction } from "@/actions/createOrderAction";
@@ -14,6 +14,16 @@ import { toast } from "sonner";
 import { checkPhoneAction } from "@/actions/checkPhoneAction";
 import { checkEmailAction } from "@/actions/checkEmailAction";
 import { cn } from "@/lib/utils";
+import OtpStep from "./OtpStep";
+import { otpConfig } from "@/lib/otpConfig";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 function computeDateBounds() {
   const today = new Date();
@@ -34,7 +44,6 @@ function computeDateBounds() {
   return { min, max };
 }
 
-
 // Client-side validation rules
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const bdPhonePattern = /^(?:\+?88)?01[3-9]\d{8}$/;
@@ -44,6 +53,9 @@ function StepOne({ action }) {
   const [emailChecking, setEmailChecking] = useState(false);
   const [autoFillNote, setAutoFillNote] = useState("");
   const [userExists, setUserExists] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpDialogOpen, setOtpDialogOpen] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState(null);
   const router = useRouter();
   const formRef = useRef(null);
 
@@ -56,6 +68,7 @@ function StepOne({ action }) {
     setValue,
     control,
     formState: { errors, isSubmitting, isValid },
+    getValues,
   } = useForm({
     mode: "onChange",
     defaultValues: { fullName: "", email: "", phone: "", dateOfBirth: "" },
@@ -69,66 +82,6 @@ function StepOne({ action }) {
 
   // Link server action to state for handling non-redirect failures
   const [serverState, formAction, isPending] = useActionState(action, null);
-
-  // const onPhoneCheck = async (value) => {
-  //   const phone  = value?.length < 11 ? '0'+value : value;
-  //   const phoneWithCountryCode  = value?.length < 11 ? '+880'+value : value;
-  //   if (!phone) return "Phone is required";
-
-  //   if (!bdPhonePattern.test(phoneWithCountryCode)) return "Invalid Bangladeshi phone";
-
-  //   setPhoneChecking(true); // 🔄 start loading
-
-  //   try {
-  //     const result = await checkPhoneAction(phone);
-
-  //     if (!result?.ok) {
-  //       return result?.message || "Validation failed";
-  //     }
-  //     if (result?.exists) {
-  //       return "This phone number is already registered";
-  //     }
-
-  //     return true;
-  //   } catch (error) {
-  //     return "Unable to validate phone. Please try again.";
-  //   } finally {
-  //     setPhoneChecking(false); // ✅ stop loading
-  //   }
-  // };
-
-  // const onValid = () => {
-  //   // Submit the native form so Server Action receives FormData (including hidden packageJson)
-  //   // This avoids extra state updates and keeps re-renders minimal
-  //   formRef.current?.requestSubmit();
-  // };
-
-  const onSubmit = async (data) => {
-    // Clear previous server errors
-    clearErrors();
-
-    const formData = new FormData(formRef.current);
-
-    // Call server action
-    const result = await createOrderAction(formData);
-
-    if (result?.ok === false) {
-      // Map server field errors
-      if (result.fieldErrors) {
-        Object.entries(result.fieldErrors).forEach(([name, message]) => {
-          setError(name, { type: "server", message: String(message) });
-        });
-      }
-
-      // Show general server message
-      if (result.message) {
-        // setError("server", { type: "server", message: result.message });
-        toast.error("Error", {
-          description: result.message ?? "Something went wrong!"
-        });
-      }
-    }
-  };
 
   // Watch email input only 
   const emailValue = useWatch({ control, name: "email" });
@@ -234,6 +187,54 @@ function StepOne({ action }) {
   }, [serverState, setError]);
 
 
+  // Only require OTP if at least one method is configured
+  const otpRequired = otpConfig.methods && otpConfig.methods.length > 0;
+
+  // This is called when user clicks Pay Now
+  const onSubmit = async (data) => {
+    // Clear previous server errors
+    clearErrors();
+
+    if (otpRequired && !otpVerified) {
+      setPendingFormData(data); // Save form data for later
+      setOtpDialogOpen(true);   // Open OTP modal
+      return;
+    }
+
+    // Submit the form as usual
+    const formData = new FormData(formRef.current);
+
+    // Call server action
+    const result = await createOrderAction(formData);
+
+    if (result?.ok === false) {
+      // Map server field errors
+      if (result.fieldErrors) {
+        Object.entries(result.fieldErrors).forEach(([name, message]) => {
+          setError(name, { type: "server", message: String(message) });
+        });
+      }
+
+      // Show general server message
+      if (result.message) {
+        // setError("server", { type: "server", message: result.message });
+        toast.error("Error", {
+          description: result.message ?? "Something went wrong!"
+        });
+      }
+    }
+  };
+
+  // Called after OTP is verified
+  const handleOtpVerified = () => {
+    setOtpVerified(true);
+    setOtpDialogOpen(false);
+    // Submit the form programmatically with the saved data
+    setTimeout(() => {
+      formRef.current?.requestSubmit();
+    }, 100);
+  };
+
   return (
     <div>
       {/* Header */}
@@ -305,8 +306,6 @@ function StepOne({ action }) {
       <div className="bg-white border border-[#30bd82] rounded-lg shadow-sm p-6">
         <form
           ref={formRef}
-          // action={formAction}
-          // onSubmit={handleSubmit(onValid)}
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-6"
         >
@@ -330,8 +329,8 @@ function StepOne({ action }) {
               disabled={userExists} // ✅ lock if user found
               {...register("fullName", { required: "Full name is required" })}
               className={cn(`mt-1 h-12 bg-white`, {
-                "border-red-500" : !!errors?.fullName,
-                "bg-gray-100 cursor-not-allowed" : userExists,
+                "border-red-500": !!errors?.fullName,
+                "bg-gray-100 cursor-not-allowed": userExists,
               })}
             />
             {errors.fullName && (
@@ -349,10 +348,6 @@ function StepOne({ action }) {
                 type="email"
                 placeholder="Enter your email address"
                 aria-invalid={errors.email ? "true" : "false"}
-                // {...register("email", {
-                //   required: "Email is required",
-                //   pattern: { value: emailPattern, message: "Email is invalid" },
-                // })}
                 {...register("email", { required: "Email is required" })}
                 className={`w-full mt-1 h-12 bg-white ${errors.email ? "border-red-500" : ""}`}
               />
@@ -372,21 +367,6 @@ function StepOne({ action }) {
             <Label htmlFor="phone" className="text-sm font-medium">
               Phone <span className="text-destructive">*</span>
             </Label>
-            {/* <Input
-              id="phone"
-              type="tel"
-              placeholder="Enter a Bangladeshi phone number"
-              aria-invalid={errors.phone ? "true" : "false"}
-              {...register("phone", {
-                required: "Phone is required",
-                // pattern: { value: bdPhonePattern, message: "Invalid Bangladeshi phone" },
-                validate: onPhoneCheck,
-              })}
-              className={`w-full mt-1 h-12 bg-white ${errors.phone ? "border-red-500" : ""}`}
-            />
-            {errors.phone && (
-              <p className="mt-1 text-sm text-red-600">{String(errors.phone.message)}</p>
-            )} */}
             <div className="relative">
               {/* Prefix */}
               <span className="absolute inset-y-0 h-12 left-0 flex items-center pl-3 text-gray-600 font-medium">
@@ -489,9 +469,33 @@ function StepOne({ action }) {
             )}
           </Button>
         </form>
+
+        {/* OTP Dialog */}
+        <Dialog open={otpDialogOpen} onOpenChange={setOtpDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Verify OTP</DialogTitle>
+              <DialogDescription>
+                Please verify your identity to proceed with payment.
+              </DialogDescription>
+            </DialogHeader>
+            <OtpStep
+              user={{
+                email: getValues("email"),
+                phone: "+880" + getValues("phone"),
+              }}
+              onVerified={handleOtpVerified}
+            />
+            <DialogClose asChild>
+              <Button variant="ghost" className="mt-4 w-full">
+                Cancel
+              </Button>
+            </DialogClose>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
 }
 
-export default StepOne
+export default StepOne;
