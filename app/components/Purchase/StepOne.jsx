@@ -90,9 +90,18 @@ function StepOne({ action = createOrderAction }) {
         if (!isCancelled && res?.ok && res?.exists && res?.user) {
           setUserExists(true) // ✅ mark user exists
           // Autofill phone + name
-          if (res?.user?.username) setValue("phone", res?.user?.username?.replace(/^(?:\+880|0)/, ""))
-          if (res?.user?.first_name) setValue("fullName", res?.user?.first_name)
-          if (res?.user?.birth_of_day) setValue("dateOfBirth", res?.user?.birth_of_day)
+          if (res?.user?.username) setValue("phone", res?.user?.username?.replace(/^(?:\+880|0)/, ""), {
+            shouldValidate: true,
+            shouldDirty: true,
+          })
+          if (res?.user?.first_name) setValue("fullName", res?.user?.first_name, {
+            shouldValidate: true,
+            shouldDirty: true,
+          })
+          if (res?.user?.birth_of_day) setValue("dateOfBirth", res?.user?.birth_of_day, {
+            shouldValidate: true,
+            shouldDirty: true,
+          })
           setAutoFillNote("We found your details and filled them in automatically.")
         } else {
           setUserExists(false) // ✅ reset if not found
@@ -128,9 +137,18 @@ function StepOne({ action = createOrderAction }) {
           setUserExists(true) // ✅ mark user exists
           // Autofill email + name
           if (res?.user?.email || res?.user?.first_name) {
-            if (res?.user?.email) setValue("email", res?.user?.email)
-            if (res?.user?.first_name) setValue("fullName", res?.user?.first_name)
-            if (res?.user?.birth_of_day) setValue("dateOfBirth", res?.user?.birth_of_day)
+            if (res?.user?.email) setValue("email", res?.user?.email, {
+              shouldValidate: true,
+              shouldDirty: true,
+            })
+            if (res?.user?.first_name) setValue("fullName", res?.user?.first_name, {
+              shouldValidate: true,
+              shouldDirty: true,
+            })
+            if (res?.user?.birth_of_day) setValue("dateOfBirth", res?.user?.birth_of_day, {
+              shouldValidate: true,
+              shouldDirty: true,
+            })
             setAutoFillNote("We found your details and filled them in automatically.")
           } else {
             setUserExists(false) // ✅ reset if not found
@@ -429,6 +447,17 @@ function StepOne({ action = createOrderAction }) {
           {autoFillNote && (
             <div className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded p-3">{autoFillNote}</div>
           )}
+
+          {
+            console.log("aaa", {
+              emailValue,
+              phoneValue,
+              isNotValid: !isValid,
+              isSubmitting,
+              isPending,
+              phoneChecking
+            })
+          }
 
           <Button
             type="submit"
