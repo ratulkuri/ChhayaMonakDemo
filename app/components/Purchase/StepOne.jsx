@@ -10,6 +10,7 @@ import { ArrowLeft, ArrowRight, Loader } from "lucide-react";
 import SelectedPackageCardSkeleton from "../Skeletons/SelectedPackageCardSkeleton";
 import SelectedOptionsCardSkeleton from "../Skeletons/SelectedOptionsCardSkeleton";
 import { createOrderAction } from "@/actions/createOrderAction";
+import { initiatePaymentAction } from "@/actions/initiatePaymentAction";
 import { toast } from "sonner";
 import { checkPhoneAction } from "@/actions/checkPhoneAction";
 import { checkEmailAction } from "@/actions/checkEmailAction";
@@ -48,7 +49,7 @@ function computeDateBounds() {
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const bdPhonePattern = /^(?:\+?88)?01[3-9]\d{8}$/;
 
-function StepOne({ action }) {
+function StepOne({ action = createOrderAction }) {
   const [phoneChecking, setPhoneChecking] = useState(false);
   const [emailChecking, setEmailChecking] = useState(false);
   const [autoFillNote, setAutoFillNote] = useState("");
@@ -56,6 +57,7 @@ function StepOne({ action }) {
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpDialogOpen, setOtpDialogOpen] = useState(false);
   const [pendingFormData, setPendingFormData] = useState(null);
+  const [orderId, setOrderId] = useState(null);
   const router = useRouter();
   const formRef = useRef(null);
 
@@ -192,47 +194,53 @@ function StepOne({ action }) {
 
   // This is called when user clicks Pay Now
   const onSubmit = async (data) => {
-    // Clear previous server errors
     clearErrors();
 
-    if (otpRequired && !otpVerified) {
-      setPendingFormData(data); // Save form data for later
-      setOtpDialogOpen(true);   // Open OTP modal
-      return;
-    }
+    // Build FormData from the latest data
+    const formData = new FormData();
+    formData.append("fullName", data.fullName);
+    formData.append("email", data.email);
+    formData.append("phone", data.phone);
+    formData.append("dateOfBirth", data.dateOfBirth);
+    formData.append(
+      "packageJson",
+      selectedPackageRef.current ? JSON.stringify(selectedPackageRef.current) : ""
+    );
 
-    // Submit the form as usual
-    const formData = new FormData(formRef.current);
+    console.log({
+      fullName: data.fullName,
+      email: data.email,
+      phone: data.phone,
+      dateOfBirth: data.dateOfBirth,
+    });
 
-    // Call server action
-    const result = await createOrderAction(formData);
+    const result = await action(formData);
 
-    if (result?.ok === false) {
-      // Map server field errors
-      if (result.fieldErrors) {
+    if (result?.ok && result?.orderId) {
+      setOrderId(result.orderId);
+      setOtpDialogOpen(true);
+    } else {
+      if (result?.fieldErrors) {
         Object.entries(result.fieldErrors).forEach(([name, message]) => {
           setError(name, { type: "server", message: String(message) });
         });
       }
-
-      // Show general server message
-      if (result.message) {
-        // setError("server", { type: "server", message: result.message });
+      if (result?.message) {
         toast.error("Error", {
-          description: result.message ?? "Something went wrong!"
+          description: result.message ?? "Something went wrong!",
         });
       }
     }
   };
 
-  // Called after OTP is verified
-  const handleOtpVerified = () => {
-    setOtpVerified(true);
+  // After OTP is verified, initiate payment
+  const handleOtpVerified = async () => {
     setOtpDialogOpen(false);
-    // Submit the form programmatically with the saved data
-    setTimeout(() => {
-      formRef.current?.requestSubmit();
-    }, 100);
+    if (orderId) {
+      await initiatePaymentAction(orderId);
+      // If not redirected, show error
+      toast.error("Error", { description: "Payment initiation failed." });
+    }
   };
 
   return (
@@ -472,7 +480,10 @@ function StepOne({ action }) {
 
         {/* OTP Dialog */}
         <Dialog open={otpDialogOpen} onOpenChange={setOtpDialogOpen}>
-          <DialogContent>
+          <DialogContent 
+            onEscapeKeyDown={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+          >
             <DialogHeader>
               <DialogTitle>Verify OTP</DialogTitle>
               <DialogDescription>
