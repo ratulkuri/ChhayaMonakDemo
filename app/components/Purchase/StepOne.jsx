@@ -1,22 +1,22 @@
-"use client";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useActionState } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowLeft, ArrowRight, Loader } from "lucide-react";
-import SelectedPackageCardSkeleton from "../Skeletons/SelectedPackageCardSkeleton";
-import SelectedOptionsCardSkeleton from "../Skeletons/SelectedOptionsCardSkeleton";
-import { createOrderAction } from "@/actions/createOrderAction";
-import { initiatePaymentAction } from "@/actions/initiatePaymentAction";
-import { toast } from "sonner";
-import { checkPhoneAction } from "@/actions/checkPhoneAction";
-import { checkEmailAction } from "@/actions/checkEmailAction";
-import { cn } from "@/lib/utils";
-import OtpStep from "./OtpStep";
-import { otpConfig } from "@/lib/otpConfig";
+"use client"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useActionState } from "react"
+import { useForm, useWatch } from "react-hook-form"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ArrowLeft, ArrowRight, Loader, Shield, X } from "lucide-react"
+import SelectedPackageCardSkeleton from "../Skeletons/SelectedPackageCardSkeleton"
+import SelectedOptionsCardSkeleton from "../Skeletons/SelectedOptionsCardSkeleton"
+import { createOrderAction } from "@/actions/createOrderAction"
+import { initiatePaymentAction } from "@/actions/initiatePaymentAction"
+import { toast } from "sonner"
+import { checkPhoneAction } from "@/actions/checkPhoneAction"
+import { checkEmailAction } from "@/actions/checkEmailAction"
+import { cn } from "@/lib/utils"
+import OtpStep from "./OtpStep"
+import { otpConfig } from "@/lib/otpConfig"
 import {
   Dialog,
   DialogContent,
@@ -24,42 +24,30 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 
 function computeDateBounds() {
-  const today = new Date();
-  const min = new Date(
-    today.getFullYear() - 65,
-    today.getMonth(),
-    today.getDate()
-  )
-    .toISOString()
-    .split("T")[0];
-  const max = new Date(
-    today.getFullYear() - 18,
-    today.getMonth(),
-    today.getDate()
-  )
-    .toISOString()
-    .split("T")[0];
-  return { min, max };
+  const today = new Date()
+  const min = new Date(today.getFullYear() - 65, today.getMonth(), today.getDate()).toISOString().split("T")[0]
+  const max = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate()).toISOString().split("T")[0]
+  return { min, max }
 }
 
 // Client-side validation rules
-const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const bdPhonePattern = /^(?:\+?88)?01[3-9]\d{8}$/;
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const bdPhonePattern = /^(?:\+?88)?01[3-9]\d{8}$/
 
 function StepOne({ action = createOrderAction }) {
-  const [phoneChecking, setPhoneChecking] = useState(false);
-  const [emailChecking, setEmailChecking] = useState(false);
-  const [autoFillNote, setAutoFillNote] = useState("");
-  const [userExists, setUserExists] = useState(false);
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [otpDialogOpen, setOtpDialogOpen] = useState(false);
-  const [pendingFormData, setPendingFormData] = useState(null);
-  const [orderId, setOrderId] = useState(null);
-  const router = useRouter();
-  const formRef = useRef(null);
+  const [phoneChecking, setPhoneChecking] = useState(false)
+  const [emailChecking, setEmailChecking] = useState(false)
+  const [autoFillNote, setAutoFillNote] = useState("")
+  const [userExists, setUserExists] = useState(false)
+  const [otpVerified, setOtpVerified] = useState(false)
+  const [otpDialogOpen, setOtpDialogOpen] = useState(false)
+  const [pendingFormData, setPendingFormData] = useState(null)
+  const [orderId, setOrderId] = useState(null)
+  const router = useRouter()
+  const formRef = useRef(null)
 
   // React Hook Form - keep inputs uncontrolled for fewer re-renders
   const {
@@ -74,174 +62,173 @@ function StepOne({ action = createOrderAction }) {
   } = useForm({
     mode: "onChange",
     defaultValues: { fullName: "", email: "", phone: "", dateOfBirth: "" },
-  });
+  })
 
   // Selected package from localStorage (client-only)
-  const selectedPackageRef = useRef(null);
+  const selectedPackageRef = useRef(null)
 
   // Compute date bounds once
-  const { min, max } = useMemo(() => computeDateBounds(), []);
+  const { min, max } = useMemo(() => computeDateBounds(), [])
 
   // Link server action to state for handling non-redirect failures
-  const [serverState, formAction, isPending] = useActionState(action, null);
+  const [serverState, formAction, isPending] = useActionState(action, null)
 
-  // Watch email input only 
-  const emailValue = useWatch({ control, name: "email" });
+  // Watch email input only
+  const emailValue = useWatch({ control, name: "email" })
   // Watch phone input only (user types without +880)
-  const phoneValue = useWatch({ control, name: "phone" });
+  const phoneValue = useWatch({ control, name: "phone" })
 
   // 🔹 When email changes → check user
   useEffect(() => {
-    if (!emailValue || !emailPattern.test(emailValue)) return;
+    if (!emailValue || !emailPattern.test(emailValue)) return
 
-    let isCancelled = false;
+    let isCancelled = false
     const checkEmail = async () => {
-      setEmailChecking(true);
+      setEmailChecking(true)
       try {
-        const res = await checkEmailAction(emailValue);
+        const res = await checkEmailAction(emailValue)
         if (!isCancelled && res?.ok && res?.exists && res?.user) {
-          setUserExists(true); // ✅ mark user exists
+          setUserExists(true) // ✅ mark user exists
           // Autofill phone + name
-          if (res?.user?.username) setValue("phone", res?.user?.username?.replace(/^(?:\+880|0)/, ""));
-          if (res?.user?.first_name) setValue("fullName", res?.user?.first_name);
-          if (res?.user?.birth_of_day) setValue("dateOfBirth", res?.user?.birth_of_day);
-          setAutoFillNote("We found your details and filled them in automatically.");
+          if (res?.user?.username) setValue("phone", res?.user?.username?.replace(/^(?:\+880|0)/, ""))
+          if (res?.user?.first_name) setValue("fullName", res?.user?.first_name)
+          if (res?.user?.birth_of_day) setValue("dateOfBirth", res?.user?.birth_of_day)
+          setAutoFillNote("We found your details and filled them in automatically.")
         } else {
-          setUserExists(false); // ✅ reset if not found
-          setAutoFillNote("");
+          setUserExists(false) // ✅ reset if not found
+          setAutoFillNote("")
         }
       } catch (err) {
-        console.error(err);
+        console.error(err)
       } finally {
-        if (!isCancelled) setEmailChecking(false);
+        if (!isCancelled) setEmailChecking(false)
       }
-    };
+    }
 
-    checkEmail();
-    return () => { isCancelled = true };
-  }, [emailValue, setValue]);
+    checkEmail()
+    return () => {
+      isCancelled = true
+    }
+  }, [emailValue, setValue])
 
   // 🔹 When phone changes → check user
   useEffect(() => {
-    if (!phoneValue || phoneValue.length !== 10) return;
-    const phone = `0${phoneValue}`;
+    if (!phoneValue || phoneValue.length !== 10) return
+    const phone = `0${phoneValue}`
 
-    if (!bdPhonePattern.test(`+880${phoneValue}`)) return;
+    if (!bdPhonePattern.test(`+880${phoneValue}`)) return
 
-    let isCancelled = false;
+    let isCancelled = false
     const checkPhone = async () => {
-      setPhoneChecking(true);
+      setPhoneChecking(true)
       try {
-        const res = await checkPhoneAction(phone);
-        console.log({res, phone});
+        const res = await checkPhoneAction(phone)
+        console.log({ res, phone })
         if (!isCancelled && res?.ok && res?.exists && res?.user) {
-          setUserExists(true); // ✅ mark user exists
+          setUserExists(true) // ✅ mark user exists
           // Autofill email + name
           if (res?.user?.email || res?.user?.first_name) {
-            if (res?.user?.email) setValue("email", res?.user?.email);
-            if (res?.user?.first_name) setValue("fullName", res?.user?.first_name);
-            if (res?.user?.birth_of_day) setValue("dateOfBirth", res?.user?.birth_of_day);
-            setAutoFillNote("We found your details and filled them in automatically.");
+            if (res?.user?.email) setValue("email", res?.user?.email)
+            if (res?.user?.first_name) setValue("fullName", res?.user?.first_name)
+            if (res?.user?.birth_of_day) setValue("dateOfBirth", res?.user?.birth_of_day)
+            setAutoFillNote("We found your details and filled them in automatically.")
           } else {
-            setUserExists(false); // ✅ reset if not found
-            setAutoFillNote("");
+            setUserExists(false) // ✅ reset if not found
+            setAutoFillNote("")
           }
         }
       } catch (err) {
-        console.error(err);
+        console.error(err)
       } finally {
-        if (!isCancelled) setPhoneChecking(false);
+        if (!isCancelled) setPhoneChecking(false)
       }
-    };
+    }
 
-    checkPhone();
-    return () => { isCancelled = true };
-  }, [phoneValue, setValue]);
+    checkPhone()
+    return () => {
+      isCancelled = true
+    }
+  }, [phoneValue, setValue])
 
   useEffect(() => {
-    setAutoFillNote("");
-    setUserExists(false);
-  }, [emailValue, phoneValue]);
+    setAutoFillNote("")
+    setUserExists(false)
+  }, [emailValue, phoneValue])
 
-  
   useEffect(() => {
-    const pkgRaw = localStorage.getItem("selectedPackage");
+    const pkgRaw = localStorage.getItem("selectedPackage")
     if (!pkgRaw) {
-      router.push("/");
-      return;
+      router.push("/")
+      return
     }
     try {
-      selectedPackageRef.current = JSON.parse(pkgRaw);
+      selectedPackageRef.current = JSON.parse(pkgRaw)
     } catch {
-      router.push("/");
+      router.push("/")
     }
-  }, [router]);
-  
+  }, [router])
+
   // If serverAction returned an error object (no redirect), reflect it in RHF
   useEffect(() => {
     if (serverState?.ok === false) {
       if (serverState.fieldErrors) {
         Object.entries(serverState.fieldErrors).forEach(([name, message]) => {
-          setError(name, { type: "server", message: String(message) });
-        });
+          setError(name, { type: "server", message: String(message) })
+        })
       }
     }
-  }, [serverState, setError]);
-
+  }, [serverState, setError])
 
   // Only require OTP if at least one method is configured
-  const otpRequired = otpConfig.methods && otpConfig.methods.length > 0;
+  const otpRequired = otpConfig.methods && otpConfig.methods.length > 0
 
   // This is called when user clicks Pay Now
   const onSubmit = async (data) => {
-    clearErrors();
+    clearErrors()
 
     // Build FormData from the latest data
-    const formData = new FormData();
-    formData.append("fullName", data.fullName);
-    formData.append("email", data.email);
-    formData.append("phone", data.phone);
-    formData.append("dateOfBirth", data.dateOfBirth);
-    formData.append(
-      "packageJson",
-      selectedPackageRef.current ? JSON.stringify(selectedPackageRef.current) : ""
-    );
+    const formData = new FormData()
+    formData.append("fullName", data.fullName)
+    formData.append("email", data.email)
+    formData.append("phone", data.phone)
+    formData.append("dateOfBirth", data.dateOfBirth)
+    formData.append("packageJson", selectedPackageRef.current ? JSON.stringify(selectedPackageRef.current) : "")
 
     console.log({
       fullName: data.fullName,
       email: data.email,
       phone: data.phone,
       dateOfBirth: data.dateOfBirth,
-    });
+    })
 
-    const result = await action(formData);
+    const result = await action(formData)
 
     if (result?.ok && result?.orderId) {
-      setOrderId(result.orderId);
-      setOtpDialogOpen(true);
+      setOrderId(result.orderId)
+      setOtpDialogOpen(true)
     } else {
       if (result?.fieldErrors) {
         Object.entries(result.fieldErrors).forEach(([name, message]) => {
-          setError(name, { type: "server", message: String(message) });
-        });
+          setError(name, { type: "server", message: String(message) })
+        })
       }
       if (result?.message) {
         toast.error("Error", {
           description: result.message ?? "Something went wrong!",
-        });
+        })
       }
     }
-  };
+  }
 
   // After OTP is verified, initiate payment
   const handleOtpVerified = async () => {
-    setOtpDialogOpen(false);
+    setOtpDialogOpen(false)
     if (orderId) {
-      await initiatePaymentAction(orderId);
+      await initiatePaymentAction(orderId)
       // If not redirected, show error
-      toast.error("Error", { description: "Payment initiation failed." });
+      toast.error("Error", { description: "Payment initiation failed." })
     }
-  };
+  }
 
   return (
     <div>
@@ -275,8 +262,7 @@ function StepOne({ action = createOrderAction }) {
             <div className="text-2xl font-bold text-gray-900">{selectedPackageRef.current.price}</div>
           </div>
         ) : (
-        //   <div className="text-sm text-red-600">Loading selected plan…</div>
-            <SelectedPackageCardSkeleton />
+          <SelectedPackageCardSkeleton />
         )}
 
         {selectedPackageRef.current?.selections ? (
@@ -305,18 +291,13 @@ function StepOne({ action = createOrderAction }) {
             </ul>
           </div>
         ) : (
-            <SelectedOptionsCardSkeleton />
-        )
-        }
+          <SelectedOptionsCardSkeleton />
+        )}
       </div>
 
       {/* Form */}
       <div className="bg-white border border-[#30bd82] rounded-lg shadow-sm p-6">
-        <form
-          ref={formRef}
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-6"
-        >
+        <form ref={formRef} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Hidden selected package for the server action */}
           <input
             type="hidden"
@@ -341,9 +322,7 @@ function StepOne({ action = createOrderAction }) {
                 "bg-gray-100 cursor-not-allowed": userExists,
               })}
             />
-            {errors.fullName && (
-              <p className="mt-1 text-sm text-red-600">{String(errors.fullName.message)}</p>
-            )}
+            {errors.fullName && <p className="mt-1 text-sm text-red-600">{String(errors.fullName.message)}</p>}
           </div>
 
           <div>
@@ -365,9 +344,7 @@ function StepOne({ action = createOrderAction }) {
                   <Loader className="animate-spin" />
                 </div>
               )}
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{String(errors.email.message)}</p>
-              )}
+              {errors.email && <p className="mt-1 text-sm text-red-600">{String(errors.email.message)}</p>}
             </div>
           </div>
 
@@ -392,7 +369,7 @@ function StepOne({ action = createOrderAction }) {
                 }`}
                 onInput={(e) => {
                   // allow only digits, max 10
-                  e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "").slice(0, 10);
+                  e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "").slice(0, 10)
                 }}
               />
 
@@ -403,9 +380,7 @@ function StepOne({ action = createOrderAction }) {
                 </div>
               )}
 
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-600">{String(errors.phone.message)}</p>
-              )}
+              {errors.phone && <p className="mt-1 text-sm text-red-600">{String(errors.phone.message)}</p>}
             </div>
           </div>
 
@@ -423,21 +398,19 @@ function StepOne({ action = createOrderAction }) {
               {...register("dateOfBirth", {
                 required: "Date of birth is required",
                 validate: (value) => {
-                  if (!value) return "Date of birth is required";
-                  const dob = new Date(value);
-                  const today = new Date();
-                  let age = today.getFullYear() - dob.getFullYear();
-                  const m = today.getMonth() - dob.getMonth();
-                  const d = today.getDate() - dob.getDate();
-                  if (m < 0 || (m === 0 && d < 0)) age--;
-                  return age >= 18 && age <= 65 || "Age must be between 18 and 65 years";
+                  if (!value) return "Date of birth is required"
+                  const dob = new Date(value)
+                  const today = new Date()
+                  let age = today.getFullYear() - dob.getFullYear()
+                  const m = today.getMonth() - dob.getMonth()
+                  const d = today.getDate() - dob.getDate()
+                  if (m < 0 || (m === 0 && d < 0)) age--
+                  return (age >= 18 && age <= 65) || "Age must be between 18 and 65 years"
                 },
               })}
               className={`w-full block mt-1 h-12 bg-white ${errors.dateOfBirth ? "border-red-500" : ""}`}
             />
-            {errors.dateOfBirth && (
-              <p className="mt-1 text-sm text-red-600">{String(errors.dateOfBirth.message)}</p>
-            )}
+            {errors.dateOfBirth && <p className="mt-1 text-sm text-red-600">{String(errors.dateOfBirth.message)}</p>}
           </div>
 
           {/* Server-level error banner */}
@@ -454,9 +427,7 @@ function StepOne({ action = createOrderAction }) {
           )}
 
           {autoFillNote && (
-            <div className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded p-3">
-              {autoFillNote}
-            </div>
+            <div className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded p-3">{autoFillNote}</div>
           )}
 
           <Button
@@ -480,33 +451,60 @@ function StepOne({ action = createOrderAction }) {
 
         {/* OTP Dialog */}
         <Dialog open={otpDialogOpen} onOpenChange={setOtpDialogOpen}>
-          <DialogContent 
+          <DialogContent
+            className="sm:max-w-md"
             onEscapeKeyDown={(e) => e.preventDefault()}
             onInteractOutside={(e) => e.preventDefault()}
+            showCloseButton={false}
           >
-            <DialogHeader>
-              <DialogTitle>Verify OTP</DialogTitle>
-              <DialogDescription>
-                Please verify your identity to proceed with payment.
+            <DialogHeader className="text-center space-y-3">
+              <div className="mx-auto w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mb-3">
+                <Shield className="w-8 h-8 text-primary" />
+              </div>
+              <DialogTitle className="text-xl text-center font-semibold text-gray-900">Verify Your Identity</DialogTitle>
+              <DialogDescription className="text-gray-600 text-center leading-relaxed">
+                We need to verify your identity to ensure the security of your transaction
               </DialogDescription>
             </DialogHeader>
-            <OtpStep
-              user={{
-                email: getValues("email"),
-                phone: "+880" + getValues("phone"),
-              }}
-              onVerified={handleOtpVerified}
-            />
-            <DialogClose asChild>
-              <Button variant="ghost" className="mt-4 w-full">
-                Cancel
-              </Button>
-            </DialogClose>
+
+            <div className="py-4">
+              <OtpStep
+                user={{
+                  email: getValues("email"),
+                  phone: "+880" + getValues("phone"),
+                }}
+                onVerified={handleOtpVerified}
+              />
+            </div>
+
+            <div className="space-y-4 pt-4 border-t">
+              <div className="text-center">
+                <p className="text-sm text-gray-500 mb-3">
+                  Didn't receive the code? Check your spam folder or try again in a few moments.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <DialogClose asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent cursor-pointer"
+                  >
+                    Cancel Payment
+                  </Button>
+                </DialogClose>
+
+                <p className="text-xs text-center text-gray-400 px-4">
+                  Your information is secure and encrypted. We use OTP verification to prevent unauthorized
+                  transactions.
+                </p>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
     </div>
-  );
+  )
 }
 
-export default StepOne;
+export default StepOne

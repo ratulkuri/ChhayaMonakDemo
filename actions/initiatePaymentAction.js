@@ -8,7 +8,10 @@ export async function initiatePaymentAction(orderId) {
   try {
     const payRes = await fetch(`${API_BASE}/create-payment`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-signature": process.env.X_SIGNATURE || "", // keep it secret in server env
+      },
       body: JSON.stringify({ orderId }),
     });
 

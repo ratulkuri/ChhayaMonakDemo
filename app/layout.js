@@ -3,7 +3,10 @@ import './globals.css'
 import NextTopLoader from 'nextjs-toploader'
 import { Toaster } from '@/components/ui/sonner'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: "--font-inter"
+})
 
 export const metadata = {
   title: 'Bangladesh Expat Insurance - Yearly Protection for You & Your Family',
