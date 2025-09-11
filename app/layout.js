@@ -35,7 +35,21 @@ export default function RootLayout({ children }) {
           showAtBottom={false}
         />
         {children}
-        <Toaster position="top-center" closeButton richColors />
+        <Toaster
+          toastOptions={{
+            classNames: {
+              toast: 'toast',
+              title: 'title',
+              description: 'description',
+              actionButton: 'action-button',
+              cancelButton: 'cancel-button',
+              closeButton: 'close-button',
+            },
+          }}
+          position="top-center"
+          closeButton
+          richColors
+        />
       </body>
     </html>
   )
