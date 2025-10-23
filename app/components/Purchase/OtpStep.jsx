@@ -26,8 +26,6 @@ export default function OtpStep({ user, onVerified }) {
         value: method === "email" ? user.email : user.phone,
       });
 
-      console.log(result);
-
       if (result?.success) {
         setOtpSent(true);
         setOtp("");

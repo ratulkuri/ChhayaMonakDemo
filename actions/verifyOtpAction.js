@@ -15,16 +15,14 @@ export async function verifyOtpAction({ method, sendTo, otp }) {
     credentials: "include",
   });
 
-  console.log(res);
-
   if (!res.ok) return { ok: false, message: "OTP verification failed" };
 
   const data = await res?.json();
 
-  console.log("verifyOtpAction => ", data);
   if (data.success) {
     // Optionally set verified_at or token in session/db here
     return { ok: true };
   }
+  
   return { ok: false, message: data.message || "OTP verification failed" };
 }

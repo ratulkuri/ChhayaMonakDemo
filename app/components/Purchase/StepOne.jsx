@@ -132,7 +132,6 @@ function StepOne({ action = createOrderAction }) {
       setPhoneChecking(true)
       try {
         const res = await checkPhoneAction(phone)
-        console.log({ res, phone })
         if (!isCancelled && res?.ok && res?.exists && res?.user) {
           setUserExists(true) // ✅ mark user exists
           // Autofill email + name
@@ -212,12 +211,12 @@ function StepOne({ action = createOrderAction }) {
     formData.append("dateOfBirth", data.dateOfBirth)
     formData.append("packageJson", selectedPackageRef.current ? JSON.stringify(selectedPackageRef.current) : "")
 
-    console.log({
-      fullName: data.fullName,
-      email: data.email,
-      phone: data.phone,
-      dateOfBirth: data.dateOfBirth,
-    })
+    // console.log({
+    //   fullName: data.fullName,
+    //   email: data.email,
+    //   phone: data.phone,
+    //   dateOfBirth: data.dateOfBirth,
+    // })
 
     const result = await action(formData)
 
@@ -225,7 +224,7 @@ function StepOne({ action = createOrderAction }) {
       setOrderId(result.transactionId)
       setOtpDialogOpen(true)
     } else {
-      console.log({result});
+      // console.log({result});
       
       if (result?.fieldErrors) {
         Object.entries(result.fieldErrors).forEach(([name, message]) => {
@@ -452,17 +451,6 @@ function StepOne({ action = createOrderAction }) {
           {autoFillNote && (
             <div className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded p-3">{autoFillNote}</div>
           )}
-
-          {
-            console.log("aaa", {
-              emailValue,
-              phoneValue,
-              isNotValid: !isValid,
-              isSubmitting,
-              isPending,
-              phoneChecking
-            })
-          }
 
           <Button
             type="submit"

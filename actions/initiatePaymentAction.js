@@ -53,7 +53,7 @@ export async function initiatePaymentAction(orderId) {
   }
 
   const paymentUrl = `https://chhaya-payment.test/initiate/${orderId}`;
-  console.log("Redirecting to:", paymentUrl);
+  console.info("Redirecting to:", paymentUrl);
   
   redirect(paymentUrl);
 }

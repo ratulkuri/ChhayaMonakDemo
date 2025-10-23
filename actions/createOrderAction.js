@@ -51,8 +51,6 @@ export async function createOrderAction(formData) {
     ...relationFlags
   };
 
-  // console.log({payload, relations: selectedPackage?.relations});
-
   // Prepare API base (prefer server-only env var)
   const API_BASE =
     process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -74,7 +72,6 @@ export async function createOrderAction(formData) {
         const j = await purchaseRes?.json();
         problem = j?.message || problem;
       } catch (_) {}
-      // console.log(`${API_BASE}/purchase => `, payload, purchaseRes);
       return { ok: false, message: problem };
     }
 
@@ -88,8 +85,6 @@ export async function createOrderAction(formData) {
     if (!transactionId) {
       return { ok: false, message: "Order created but no transactionId returned." };
     }
-
-    // console.log('createOrderAction => ', payload);
 
     // Return orderId for next step
     return { ok: true, orderId, transactionId };

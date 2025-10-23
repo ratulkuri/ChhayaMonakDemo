@@ -37,7 +37,7 @@ export async function sendOtpAction({ method, value }) {
     };
 
   } catch (e) {
-    console.log("sendOtpAction | catch => ", e);
+    console.error("sendOtpAction | catch => ", e);
     return { success: false, message: result?.message || "Failed to send OTP. Try again.", cooldownRemaining: (result?.cooldownRemaining || 0) };
   }
 }
