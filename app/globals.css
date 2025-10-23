@@ -119,6 +119,18 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  .toast[data-type=error] .title {
+    @apply text-lg
+  }
+
+  .toast[data-type=error] [data-icon] {
+    @apply !w-9
+  }
+
+  .toast[data-type=error] [data-icon] svg {
+    @apply size-10
+  }
 }
 
 

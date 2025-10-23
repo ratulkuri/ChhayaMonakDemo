@@ -5,8 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Users, Baby, Heart, CircleCheckBig } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
 
-export default function PackageSelection({ onPackageSelect }) {
+export default function PackageSelection({ packagePrice = null }) {
+  const router = useRouter()
+  const [selectedPackage, setSelectedPackage] = useState(null)
+  
   const [selections, setSelections] = useState({
     spouse: false,
     children: null, // null, '1', '2', or '3'
@@ -16,33 +20,66 @@ export default function PackageSelection({ onPackageSelect }) {
   const [totalPrice, setTotalPrice] = useState(0)
   const [isValidSelection, setIsValidSelection] = useState(false)
 
-  const BASE_PRICE = 20000
-  const SPOUSE_PRICE = 5000
-  const CHILD_PRICE = 3000
-  const PARENT_PRICE = 10000
+  // const BASE_PRICE = 20000
+  // const SPOUSE_PRICE = 5000
+  // const CHILD_PRICE = 3000
+  // const PARENT_PRICE = 10000
+
+  
+  
+  const handlePackageSelect = (packageData) => {
+    setSelectedPackage(packageData)
+    // Store in localStorage for purchase flow
+    localStorage.setItem('selectedPackage', JSON.stringify(packageData))
+    router.push('/purchase/step1')
+  }
 
   // Calculate total price whenever selections change
   useEffect(() => {
-    let price = BASE_PRICE
-    
-    if (selections.spouse) {
-      price += SPOUSE_PRICE
+    let price = 0;
+
+    if (packagePrice) {
+      // Get base price (1 person pricing if available)
+      const basePricing = packagePrice.family_pricing?.find(
+        (p) => p.number_of_people === "1"
+      );
+      if (basePricing?.price) {
+        price += parseInt(basePricing.price, 10);
+      }
+
+      // Add spouse
+      if (selections.spouse) {
+        const spouse1 = packagePrice.family_coverages?.find(c => c.relation === "spouse_1");
+        price += spouse1?.price ?? 0;
+      }
+
+      // Children
+      if (selections.children) {
+        const count = parseInt(selections.children, 10);
+        for (let i = 1; i <= count; i++) {
+          const child = packagePrice.family_coverages?.find(c => c.relation === `child_${i}`);
+          price += child?.price ?? 0;
+        }
+      }
+
+      // Parents
+      if (selections.parents) {
+        const count = parseInt(selections.parents, 10);
+        for (let i = 1; i <= count; i++) {
+          const parent = packagePrice.family_coverages?.find(c => c.relation === `parent_${i}`);
+          price += parent?.price ?? 0;
+        }
+      }
     }
-    
-    if (selections.children) {
-      price += parseInt(selections.children) * CHILD_PRICE
-    }
-    
-    if (selections.parents) {
-      price += parseInt(selections.parents) * PARENT_PRICE
-    }
-    
-    setTotalPrice(price)
-    
-    // Check if at least one option is selected
-    const hasSelection = selections.spouse || selections.children || selections.parents
-    setIsValidSelection(hasSelection)
-  }, [selections])
+
+    setTotalPrice(price);
+
+    // At least one member selected
+    const hasSelection = selections.spouse || selections.children || selections.parents;
+    setIsValidSelection(hasSelection);
+  }, [selections, packagePrice]);
+
+
 
   const handleSpouseChange = () => {
     setSelections(prev => ({ ...prev, spouse: !prev?.spouse }))
@@ -63,18 +100,52 @@ export default function PackageSelection({ onPackageSelect }) {
   }
 
   const handleProceed = () => {
-    if (!isValidSelection) return
+    if (!isValidSelection) return;
+
+    // Build selected relations list with prices
+    let selectedRelations = [];
+
+    if (selections.spouse) {
+      const spouse1 = packagePrice.family_coverages?.find(c => c.relation === "spouse_1");
+      if (spouse1) selectedRelations.push({ relation: spouse1.relation, price: spouse1.price });
+    }
+
+    if (selections.children) {
+      const count = parseInt(selections.children, 10);
+      for (let i = 1; i <= count; i++) {
+        const child = packagePrice.family_coverages?.find(c => c.relation === `child_${i}`);
+        if (child) selectedRelations.push({ relation: child.relation, price: child.price });
+      }
+    }
+
+    if (selections.parents) {
+      const count = parseInt(selections.parents, 10);
+      for (let i = 1; i <= count; i++) {
+        const parent = packagePrice.family_coverages?.find(c => c.relation === `parent_${i}`);
+        if (parent) selectedRelations.push({ relation: parent.relation, price: parent.price });
+      }
+    }
+
+    // Extract base price once (constant)
+    const basePricing = packagePrice.family_pricing?.find(
+      (p) => p.number_of_people === "1"
+    );
+    const basePrice = basePricing ? parseInt(basePricing.price, 10) : 0;
 
     const packageData = {
-      id: 'custom',
-      name: 'Custom Family Plan',
-      price: `৳${totalPrice.toLocaleString()}`,
-      selections: selections,
-      coverage: generateCoverageList()
-    }
-    
-    onPackageSelect(packageData)
-  }
+      id: packagePrice?.id,
+      name: packagePrice?.title,
+      basePrice,                       // NEW: keep base price separate
+      totalPrice,                      // NEW: store total number (not just string)
+      price: `$${totalPrice.toLocaleString()}`, 
+      selections,                      // UI state reference
+      relations: selectedRelations,    // detailed member breakdown
+      coverage: generateCoverageList(),
+    };
+
+    handlePackageSelect(packageData);
+  };
+
 
   const generateCoverageList = () => {
     const coverage = [
@@ -98,8 +169,8 @@ export default function PackageSelection({ onPackageSelect }) {
   ]
 
   const parentsOptions = [
-    { value: '1', label: '1 Parent' },
-    { value: '2', label: 'Both Parents' }
+    // { value: '1', label: '1 Parent' },
+    { value: '2', label: 'Include Parents' }
   ]
 
   return (
@@ -194,15 +265,17 @@ export default function PackageSelection({ onPackageSelect }) {
                 <p className='text-xs text-muted-foreground text-center ml-2 pl-2 border-s-2 hidden lg:inline'>Select one parent option (tap again to deselect)</p>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 md:gap-4">
+              <div className={cn("grid grid-cols-2 gap-2 md:gap-4", {
+                "grid-cols-1": parentsOptions?.length === 1
+              })}>
                 {parentsOptions.map((option) => (
                   <div
                     key={option.value}
-                    className={`p-2 md:p-3 rounded-lg border-2 cursor-pointer transition-all text-center ${
-                      selections.parents === option.value
-                        ? 'border-[#30bd82] bg-[#30bd82]/5'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                    className={cn(`p-2 md:p-3 rounded-lg border-2 cursor-pointer transition-all text-center`, {
+                      'border-[#30bd82] bg-[#30bd82]/5' : selections.parents === option.value,
+                      'border-gray-200 hover:border-gray-300' : selections.parents !== option.value,
+                      'p-3 md:p-4 text-left': parentsOptions?.length === 1
+                    })}
                     onClick={() => handleParentsChange(option.value)}
                   >
                     <Checkbox
@@ -210,7 +283,9 @@ export default function PackageSelection({ onPackageSelect }) {
                       readOnly
                       className="data-[state=checked]:bg-[#30bd82] data-[state=checked]:border-[#30bd82] mx-auto mb-2 hidden"
                     />
-                    <h4 className="flex gap-4 justify-center items-center text-sm md:text-base font-medium text-gray-900">
+                    <h4 className={cn("flex gap-4 items-center text-base md:text-lg font-medium text-gray-900", {
+                      "justify-center text-sm md:text-base" : parentsOptions?.length > 1
+                    })}>
                       {
                         selections.parents === option.value 
                         && <CircleCheckBig className='text-[#30bd82] shrink-0 size-5 lg:size-6' />
@@ -231,7 +306,7 @@ export default function PackageSelection({ onPackageSelect }) {
                 {isValidSelection && (
                   <>
                     <p className="text-sm text-gray-600 mb-2">Total Annual Premium</p>
-                    <p className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#30bd82] mb-4">৳{totalPrice.toLocaleString()}</p>
+                    <p className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#30bd82] mb-4">${totalPrice.toLocaleString()}</p>
                   </>
                 )}
                 {!isValidSelection && (

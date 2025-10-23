@@ -14,7 +14,7 @@ export function SearchModal() {
 
   const handleSearch = () => {
     // Handle search logic here
-    console.log("Searching for:", searchQuery, "in category:", selectedCategory)
+    console.info("Searching for:", searchQuery, "in category:", selectedCategory)
     setIsOpen(false)
   }
 

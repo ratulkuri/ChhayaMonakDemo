@@ -1,8 +1,12 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import NextTopLoader from 'nextjs-toploader'
+import { Toaster } from '@/components/ui/sonner'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: "--font-inter"
+})
 
 export const metadata = {
   title: 'Bangladesh Expat Insurance - Yearly Protection for You & Your Family',
@@ -31,6 +35,21 @@ export default function RootLayout({ children }) {
           showAtBottom={false}
         />
         {children}
+        <Toaster
+          toastOptions={{
+            classNames: {
+              toast: 'toast',
+              title: 'title',
+              description: 'description',
+              actionButton: 'action-button',
+              cancelButton: 'cancel-button',
+              closeButton: 'close-button',
+            },
+          }}
+          position="top-center"
+          closeButton
+          richColors
+        />
       </body>
     </html>
   )
