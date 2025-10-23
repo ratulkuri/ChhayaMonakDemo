@@ -221,10 +221,12 @@ function StepOne({ action = createOrderAction }) {
 
     const result = await action(formData)
 
-    if (result?.ok && result?.orderId) {
-      setOrderId(result.orderId)
+    if (result?.ok && result?.transactionId) {
+      setOrderId(result.transactionId)
       setOtpDialogOpen(true)
     } else {
+      console.log({result});
+      
       if (result?.fieldErrors) {
         Object.entries(result.fieldErrors).forEach(([name, message]) => {
           setError(name, { type: "server", message: String(message) })
@@ -242,9 +244,12 @@ function StepOne({ action = createOrderAction }) {
   const handleOtpVerified = async () => {
     setOtpDialogOpen(false)
     if (orderId) {
-      await initiatePaymentAction(orderId)
-      // If not redirected, show error
-      toast.error("Error", { description: "Payment initiation failed." })
+      try {
+        await initiatePaymentAction(orderId)
+      } catch {
+        // If not redirected, show error
+        toast.error("Error", { description: "Payment initiation failed." })
+      }
     }
   }
 
@@ -262,7 +267,7 @@ function StepOne({ action = createOrderAction }) {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Plans
           </Button>
-          <div className="text-sm text-gray-500">Step 1 of 3</div>
+          {/* <div className="text-sm text-gray-500">Step 1 of 3</div> */}
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Personal Information</h1>
         <p className="text-gray-600">Please provide your details to continue with your purchase</p>
@@ -325,25 +330,6 @@ function StepOne({ action = createOrderAction }) {
           />
 
           <div>
-            <Label htmlFor="fullName" className="text-sm font-medium">
-              Full Name <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="fullName"
-              type="text"
-              placeholder="Enter your full name"
-              aria-invalid={errors.fullName ? "true" : "false"}
-              disabled={userExists} // ✅ lock if user found
-              {...register("fullName", { required: "Full name is required" })}
-              className={cn(`mt-1 h-12 bg-white`, {
-                "border-red-500": !!errors?.fullName,
-                "bg-gray-100 cursor-not-allowed": userExists,
-              })}
-            />
-            {errors.fullName && <p className="mt-1 text-sm text-red-600">{String(errors.fullName.message)}</p>}
-          </div>
-
-          <div>
             <Label htmlFor="email" className="text-sm font-medium">
               Email Address <span className="text-destructive">*</span>
             </Label>
@@ -380,7 +366,7 @@ function StepOne({ action = createOrderAction }) {
                 type="tel"
                 placeholder="1XXXXXXXXX"
                 aria-invalid={errors.phone ? "true" : "false"}
-                disabled={phoneChecking}
+                disabled={phoneChecking || (userExists && phoneValue)}
                 {...register("phone", { required: "Phone is required" })}
                 className={`w-full mt-1 h-12 bg-white text-gray-600 pl-16 pr-10 !text-base font-medium ${
                   errors.phone ? "border-red-500" : ""
@@ -400,6 +386,25 @@ function StepOne({ action = createOrderAction }) {
 
               {errors.phone && <p className="mt-1 text-sm text-red-600">{String(errors.phone.message)}</p>}
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="fullName" className="text-sm font-medium">
+              Full Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="fullName"
+              type="text"
+              placeholder="Enter your full name"
+              aria-invalid={errors.fullName ? "true" : "false"}
+              disabled={userExists} // ✅ lock if user found
+              {...register("fullName", { required: "Full name is required" })}
+              className={cn(`mt-1 h-12 bg-white`, {
+                "border-red-500": !!errors?.fullName,
+                "bg-gray-100 cursor-not-allowed": userExists,
+              })}
+            />
+            {errors.fullName && <p className="mt-1 text-sm text-red-600">{String(errors.fullName.message)}</p>}
           </div>
 
           <div>
@@ -504,30 +509,6 @@ function StepOne({ action = createOrderAction }) {
                 }}
                 onVerified={handleOtpVerified}
               />
-            </div>
-
-            <div className="space-y-4 pt-4 border-t">
-              <div className="text-center">
-                <p className="text-sm text-gray-500 mb-3">
-                  Didn't receive the code? Check your spam folder or try again in a few moments.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <DialogClose asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent cursor-pointer"
-                  >
-                    Cancel Payment
-                  </Button>
-                </DialogClose>
-
-                <p className="text-xs text-center text-gray-400 px-4">
-                  Your information is secure and encrypted. We use OTP verification to prevent unauthorized
-                  transactions.
-                </p>
-              </div>
             </div>
           </DialogContent>
         </Dialog>

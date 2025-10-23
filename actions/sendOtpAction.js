@@ -16,22 +16,28 @@ export async function sendOtpAction({ method, value }) {
       body: JSON.stringify({ method, value }),
     });
 
-    console.log("sendOtpAction | JSON.stringify({ method, value }) => ", JSON.stringify({ method, value }));
-
     if (!res.ok) {
       return { success: false, message: "Failed to send OTP" };
     }
 
     const result = await res.json();
 
-    console.log("sendOtpAction | result => ", result);
-
     if (!result?.success) {
-      return { success: false, message: result?.message || "Failed to send OTP" };
+      return { 
+        success: false, 
+        message: result?.message || "Failed to send OTP", 
+        cooldownRemaining: (result?.cooldownRemaining || 0) 
+      };
     }
-    return { success: true };
+
+    return { 
+      success: true, 
+      message: result?.message || "Failed to send OTP", 
+      cooldownRemaining: (result?.cooldownRemaining || 0)  
+    };
+
   } catch (e) {
     console.log("sendOtpAction | catch => ", e);
-    return { success: false, message: "Failed to send OTP. Try again." };
+    return { success: false, message: result?.message || "Failed to send OTP. Try again.", cooldownRemaining: (result?.cooldownRemaining || 0) };
   }
 }

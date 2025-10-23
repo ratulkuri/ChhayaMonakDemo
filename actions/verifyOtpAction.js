@@ -1,6 +1,6 @@
 "use server"
 
-export async function verifyOtpAction({ method, value, otp }) {
+export async function verifyOtpAction({ method, sendTo, otp }) {
   const { otpConfig } = await import("@/lib/otpConfig");
   const methodConfig = otpConfig.methods.find(m => m.type === method);
   // Use fetch to call the verify endpoint (could be cross-domain)
@@ -11,11 +11,17 @@ export async function verifyOtpAction({ method, value, otp }) {
         "Content-Type": "application/json",
         "x-signature": process.env.X_SIGNATURE || "", // keep it secret in server env
     },
-    body: JSON.stringify({ method, value, otp }),
+    body: JSON.stringify({ method, sendTo, otp }),
     credentials: "include",
   });
+
+  console.log(res);
+
   if (!res.ok) return { ok: false, message: "OTP verification failed" };
+
   const data = await res?.json();
+
+  console.log("verifyOtpAction => ", data);
   if (data.success) {
     // Optionally set verified_at or token in session/db here
     return { ok: true };

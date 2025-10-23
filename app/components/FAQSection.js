@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { cn } from '@/lib/utils'
 
 export default function FAQSection() {
   const [openItems, setOpenItems] = useState({})
@@ -81,10 +82,12 @@ export default function FAQSection() {
 
         <div className="space-y-4">
           {faqs.map((faq) => (
-            <Collapsible key={faq.id}>
+            <Collapsible className="group" key={faq.id}>
               <CollapsibleTrigger 
                 onClick={() => toggleItem(faq.id)}
-                className="w-full bg-white rounded-lg p-6 flex items-center justify-between hover:shadow-md [data-sate=true]:rounded-b-none transition-shadow duration-200 text-left"
+                className={cn("cursor-pointer w-full bg-white rounded-lg p-6 flex items-center justify-between group-hover:shadow-md [data-sate=true]:rounded-b-none transition-shadow duration-200 text-left", {
+                  "rounded-b-none": openItems[faq.id]
+                })}
               >
                 <h3 className="text-lg font-semibold text-gray-900 pr-4">{faq.question}</h3>
                 {openItems[faq.id] ? (
@@ -93,7 +96,7 @@ export default function FAQSection() {
                   <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className="px-6 pb-6 bg-white rounded-b-lg">
+              <CollapsibleContent className="group-hover:shadow-md px-6 pb-6 bg-white rounded-b-lg">
                 <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
               </CollapsibleContent>
             </Collapsible>

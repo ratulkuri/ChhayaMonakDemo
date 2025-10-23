@@ -51,7 +51,7 @@ export async function createOrderAction(formData) {
     ...relationFlags
   };
 
-  console.log({payload, relations: selectedPackage?.relations});
+  // console.log({payload, relations: selectedPackage?.relations});
 
   // Prepare API base (prefer server-only env var)
   const API_BASE =
@@ -71,20 +71,28 @@ export async function createOrderAction(formData) {
     if (!purchaseRes.ok) {
       let problem = "Unable to create order.";
       try {
-        const j = await purchaseRes.json();
+        const j = await purchaseRes?.json();
         problem = j?.message || problem;
       } catch (_) {}
+      // console.log(`${API_BASE}/purchase => `, payload, purchaseRes);
       return { ok: false, message: problem };
     }
 
     const purchaseData = await purchaseRes.json();
     const orderId = purchaseData?.orderId || purchaseData?.id;
+    const transactionId = purchaseData?.transactionId;
     if (!orderId) {
       return { ok: false, message: "Order created but no orderId returned." };
     }
 
+    if (!transactionId) {
+      return { ok: false, message: "Order created but no transactionId returned." };
+    }
+
+    // console.log('createOrderAction => ', payload);
+
     // Return orderId for next step
-    return { ok: true, orderId };
+    return { ok: true, orderId, transactionId };
   } catch (err) {
     console.error("createOrderAction error", err);
     return { ok: false, message: "Something went wrong. Please try again." };

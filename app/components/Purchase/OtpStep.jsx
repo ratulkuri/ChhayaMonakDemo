@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { otpConfig } from "@/lib/otpConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ export default function OtpStep({ user, onVerified }) {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [cooldown, setCooldown] = useState(0);
 
   const methodConfig = otpConfig.methods.find(m => m.type === method);
 
@@ -29,7 +30,13 @@ export default function OtpStep({ user, onVerified }) {
 
       if (result?.success) {
         setOtpSent(true);
+        setOtp("");
+        setCooldown(result?.cooldownRemaining);
       } else {
+        if (result?.cooldownRemaining > 0) {
+          setCooldown(result?.cooldownRemaining);
+        }
+
         throw new Error(result?.message || "Failed to send OTP");
       }
     } catch (e) {
@@ -44,7 +51,7 @@ export default function OtpStep({ user, onVerified }) {
     setError("");
     const result = await verifyOtpAction({
       method,
-      value: method === "email" ? user.email : user.phone,
+      sendTo: method === "email" ? user.email : user.phone,
       otp,
     });
     setLoading(false);
@@ -69,6 +76,14 @@ export default function OtpStep({ user, onVerified }) {
       return "***-***-" +`${phone.slice(-4)}`
     }
   }
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const interval = setInterval(() => {
+      setCooldown(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldown]);
 
   return (
     <div className="space-y-4">
@@ -182,10 +197,10 @@ export default function OtpStep({ user, onVerified }) {
                 Didn't receive the code?{" "}
                 <button
                   onClick={sendOtp}
-                  disabled={loading}
+                  disabled={loading || (cooldown > 0)}
                   className="text-primary hover:text-primary font-medium disabled:opacity-50 cursor-pointer"
                 >
-                  Resend code
+                  {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
                 </button>
               </p>
             </div>
