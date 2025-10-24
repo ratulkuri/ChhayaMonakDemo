@@ -3,23 +3,37 @@ import PackageSelection from './components/PackageSelection'
 import ServiceDetails from './components/ServiceDetails'
 import FAQSection from './components/FAQSection'
 import Footer from './components/Footer'
+import { serverFetch } from '@/utils/serverApi'
 
 export default async function HomePage() {
-  const API_BASE = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "";
-  const packagePricesFetcher = fetch(`${API_BASE}/get-products`, {
-    method: "GET",
-    headers: {
-      'x-signature': process.env.X_SIGNATURE ?? ""
-    }
-  });
-  let packagePrices = {};
-  const packagePricesRes = await packagePricesFetcher;
+  let packagePrice = null;
 
-  if(packagePricesRes?.ok) {
-    packagePrices = await packagePricesRes.json();
+  try {
+    // Use the reusable utility function
+    const packagePricesRes = await serverFetch('/get-products', {
+      method: 'GET'
+      // All headers (x-signature, Authorization) are now handled internally
+    });
+
+    if (packagePricesRes.ok) {
+      const packagePrices = await packagePricesRes.json();
+      
+      // Apply your post-processing logic immediately after success
+      packagePrice = (
+        packagePrices?.family_pricing?.[0]?.price && 
+        (packagePrices?.family_coverages?.length > 0)
+      ) ? packagePrices : null;
+
+    } else if (packagePricesRes.status === 401) {
+      console.warn('Authentication failed for package fetch. Token expired or missing.');
+    } else {
+      console.error(`Package fetch failed with status: ${packagePricesRes.status}`);
+    }
+
+  } catch (error) {
+    console.error("Critical error during API fetch in HomePage:", error.message);
   }
 
-  const packagePrice = (packagePrices?.family_pricing?.[0]?.price && (packagePrices?.family_coverages?.length > 0)) ? packagePrices : null;
 
   return (
     <div className="min-h-screen bg-white">

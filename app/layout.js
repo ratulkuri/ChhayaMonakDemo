@@ -2,6 +2,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import NextTopLoader from 'nextjs-toploader'
 import { Toaster } from '@/components/ui/sonner'
+import { AuthProvider } from '@/providers/AuthProvider'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -34,7 +35,9 @@ export default function RootLayout({ children }) {
           zIndex={1600}
           showAtBottom={false}
         />
-        {children}
+        {/* <AuthProvider> */}
+          {children}
+        {/* </AuthProvider> */}
         <Toaster
           toastOptions={{
             classNames: {

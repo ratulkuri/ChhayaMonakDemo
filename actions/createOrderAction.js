@@ -1,5 +1,7 @@
 "use server";
 
+import { serverFetch } from "@/utils/serverApi";
+
 export async function createOrderAction(formData) {
   // Extract values using .get()
   const fullName = formData.get("fullName")?.toString().trim();
@@ -57,12 +59,8 @@ export async function createOrderAction(formData) {
 
   try {
     // 1) Create order & user
-    const purchaseRes = await fetch(`${API_BASE}/purchase`, {
+    const purchaseRes = await serverFetch(`/purchase`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-signature": process?.env?.X_SIGNATURE
-      },
       body: JSON.stringify(payload),
     });
 
