@@ -1,15 +1,13 @@
 "use server";
 
+import { serverFetch } from "@/utils/serverApi";
+
 export async function checkPhoneAction(phone) {
   try {
-    const res = await fetch(
-      `${process.env.API_BASE_URL}/phone-check`,
+    const res = await serverFetch(
+      `/phone-check`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-signature": process.env.X_SIGNATURE || "", // keep it secret in server env
-        },
         body: JSON.stringify({ phone }),
         cache: "no-store",
       }

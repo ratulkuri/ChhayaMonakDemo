@@ -1,19 +1,15 @@
 "use server";
 
+import { serverFetch } from "@/utils/serverApi";
+
 export async function checkEmailAction(email) {
   try {
-    const res = await fetch(
-      `${process.env.API_BASE_URL}/email-check`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-signature": process.env.X_SIGNATURE || "", // keep it secret in server env
-        },
-        body: JSON.stringify({ email }),
-        cache: "no-store",
-      }
-    );
+    const res = await serverFetch('/email-check', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+      cache: "no-store",
+      // All headers (x-signature, Authorization) are now handled internally
+    });
 
     if (!res.ok) {
       return { ok: false, message: `Server returned ${res.status}` };

@@ -1,5 +1,7 @@
 "use server";
 
+import { serverFetch } from "@/utils/serverApi";
+
 export async function sendOtpAction({ method, value }) {
   // You may want to get the endpoint from config or env
   const { otpConfig } = await import("@/lib/otpConfig");
@@ -7,16 +9,13 @@ export async function sendOtpAction({ method, value }) {
   if (!methodConfig) return { success: false, message: "Invalid method" };
 
   try {
-    const res = await fetch(methodConfig.endpoint, {
+    const res = await serverFetch(methodConfig.endpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-signature": process.env.X_SIGNATURE || "", // keep it secret in server env
-      },
       body: JSON.stringify({ method, value }),
     });
 
     if (!res.ok) {
+      console.error("sendOtpAction | response not ok => ", res.status);
       return { success: false, message: "Failed to send OTP" };
     }
 
