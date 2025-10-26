@@ -65,6 +65,15 @@ async function refreshAuthToken() {
     }
 }
 
+export async function getCookieData() {
+  const cookieStore = await cookies()
+  const cookieData = cookieStore.getAll()
+  return new Promise((resolve) =>
+    setTimeout(() => {
+      resolve(cookieData)
+    }, 1000)
+  )
+}
 
 /**
  * Fetches data from the internal API using the HttpOnly cookie for authorization.
@@ -76,9 +85,11 @@ async function refreshAuthToken() {
 export async function serverFetch(endpoint, options = {}) {
     
     // 1. Initial attempt configuration
-    let cookieStore = await cookies();
-    let apiTokenCookie = cookieStore.get('api_token');
+    let cookieData = await getCookieData();
+    // let apiTokenCookie = cookieStore.get('api_token');
+    let apiTokenCookie = cookieData?.find(cookie => cookie.name === 'api_token');
     let apiToken = apiTokenCookie ? apiTokenCookie.value : null;
+
     
     // We will use a mutable request configuration
     let currentOptions = options; 
