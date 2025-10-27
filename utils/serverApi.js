@@ -3,6 +3,8 @@
 // /utils/serverFetch.js
 
 import { cookies } from 'next/headers'; 
+import axios from 'axios';
+
 // We use 'node-fetch' or similar logic here for the server-to-server call.
 // Since we are running in the Node.js environment of Next.js, we can use 
 // native global fetch for the proxy call as well.
@@ -20,22 +22,30 @@ async function refreshAuthToken() {
     try {
         // Call the internal Next.js Route Handler/Proxy to get a new cookie
         // We use fetch directly and instruct it to forward the existing request cookies.
-        const res = await fetch(`${process.env.APP_BASE_URL}${INTERNAL_AUTH_ENDPOINT}`, { 
-            method: 'POST', 
-            cache: 'no-store',
-            body: JSON.stringify({
-                client_key: process.env.NEXT_PUBLIC_API_CLIENT_KEY,
-                client_secret: process.env.API_CLIENT_SECRET,
-            }),
-            // CRITICAL: We need to ensure any existing session cookie/context is 
-            // available to the proxy handler, but since the proxy only cares 
-            // about setting the *new* HttpOnly cookie, we simplify the call:
+        const fetchUrl = `${process.env.APP_BASE_URL}${INTERNAL_AUTH_ENDPOINT}`;
+        // const res = await fetch(fetchUrl, { 
+        //     method: 'POST', 
+        //     cache: 'no-store',
+        //     body: JSON.stringify({
+        //         client_key: process.env.NEXT_PUBLIC_API_CLIENT_KEY,
+        //         client_secret: process.env.API_CLIENT_SECRET,
+        //     }),
+        //     // CRITICAL: We need to ensure any existing session cookie/context is 
+        //     // available to the proxy handler, but since the proxy only cares 
+        //     // about setting the *new* HttpOnly cookie, we simplify the call:
+        // });
+        
+        const res = await axios.post(fetchUrl, {
+            client_key: process.env.NEXT_PUBLIC_API_CLIENT_KEY,
+            client_secret: process.env.API_CLIENT_SECRET,
         });
+        
+        console.log("server | refreshTOken | res => ", res);
 
         // The key action of the internal proxy is setting the 'Set-Cookie' header.
         // On success, we assume the new cookie has been correctly set on the response
         // headers which Next.js forwards to the browser.
-        if (res.ok) {
+        if (res?.data?.token) {
             // Because this function is running within a Server Component context,
             // we must rely on the **cookies().set()** method to guarantee the new cookie
             // is available for the retry AND is sent back to the browser.
@@ -48,9 +58,9 @@ async function refreshAuthToken() {
             // A more robust solution might have the proxy return the new token directly 
             // in the JSON body, but for this pattern, let's re-read the store.
             
-            // Re-read the cookie store after the successful refresh (Next.js context might update)
-            const data = await res.json();
-            const token = data?.token || null;
+            // // Re-read the cookie store after the successful refresh (Next.js context might update)
+            // const data = await res.json();
+            const token = res?.data?.token || null;
 
             // Return the new token for use in the retry
             return token;
@@ -84,72 +94,87 @@ export async function getCookieData() {
  */
 export async function serverFetch(endpoint, options = {}) {
     
-    // 1. Initial attempt configuration
-    let cookieData = await getCookieData();
-    // let apiTokenCookie = cookieStore.get('api_token');
-    let apiTokenCookie = cookieData?.find(cookie => cookie.name === 'api_token');
-    let apiToken = apiTokenCookie ? apiTokenCookie.value : null;
-
-    
-    // We will use a mutable request configuration
-    let currentOptions = options; 
-
-    // 2. The main fetching logic loop
-    for (let i = 0; i < 2; i++) { // Max 2 attempts (initial + 1 retry after refresh)
-
-        // 3. Prepare headers for the current attempt
-        const authHeader = apiToken ? `Bearer ${apiToken}` : undefined;
-
-        const defaultHeaders = {
-            'x-signature': X_SIGNATURE,
-            ...(authHeader && { 'Authorization': authHeader }),
-            ...((currentOptions.method && currentOptions.method !== 'GET') && { 'Content-Type': 'application/json' }) 
-        };
-
-        const headers = {
-            ...defaultHeaders,
-            ...(currentOptions.headers || {}),
-        };
+    try {
         
-        // 4. Execute the fetch request
-        const url = `${API_BASE_URL}${endpoint}`;
-        const cacheOption = currentOptions.cache || 'no-store';
-
-        const response = await fetch(url, {
-            ...currentOptions,
-            cache: cacheOption,
-            headers: headers,
-        });
-
-        // 5. Check response status
-        if (response.ok) {
-            // Success: return the response immediately
-            return response;
-
-        } else if (response.status === 401 && i === 0) {
-            // 6. Handle 401 on the first attempt (token expired)
-            console.warn('401 detected in Server Component. Attempting token refresh...');
+        
+        // 1. Initial attempt configuration
+        // let cookieData = await getCookieData();
+        // let apiTokenCookie = cookieData?.find(cookie => cookie.name === 'api_token');
+        let cookieStore = await cookies();
+        let apiTokenCookie = cookieStore.get('api_token');
+        let apiToken = apiTokenCookie ? apiTokenCookie.value : null;
+    
+        
+        // We will use a mutable request configuration
+        let currentOptions = options; 
+    
+        // 2. The main fetching logic loop
+        for (let i = 0; i < 2; i++) { // Max 2 attempts (initial + 1 retry after refresh)
+    
+            // 3. Prepare headers for the current attempt
+            const authHeader = apiToken ? `Bearer ${apiToken}` : undefined;
+    
+            const defaultHeaders = {
+                'x-signature': X_SIGNATURE,
+                ...(authHeader && { 'Authorization': authHeader }),
+                ...((currentOptions.method && currentOptions.method !== 'GET') && { 'Content-Type': 'application/json' }) 
+            };
+    
+            const headers = {
+                ...defaultHeaders,
+                ...(currentOptions.headers || {}),
+            };
             
-            // Call the refresh utility
-            const newToken = await refreshAuthToken();
-
-            if (newToken) {
-                // Update token for retry and continue the loop
-                apiToken = newToken;
-                console.log('Token refreshed successfully. Retrying request...');
-                continue; // Retry the loop with the new token
-
+            // 4. Execute the fetch request
+            const url = `${API_BASE_URL}${endpoint}`;
+            const cacheOption = currentOptions.cache || 'no-store';
+            
+            const fetchOptions = {
+                ...currentOptions,
+                cache: cacheOption,
+                headers: headers,
+            };
+    
+            const response = await fetch(url, fetchOptions);
+            
+            console.debug('fetchOptions from serverFetch => ', fetchOptions);
+            console.debug('response from serverFetch => ', response);
+    
+            // 5. Check response status
+            if (response.ok) {
+                // Success: return the response immediately
+                return response;
+    
+            } else if (response.status === 401 && i === 0) {
+                // 6. Handle 401 on the first attempt (token expired)
+                console.warn('401 detected in Server Component. Attempting token refresh...');
+                
+                // Call the refresh utility
+                const newToken = await refreshAuthToken();
+    
+                if (newToken) {
+                    // Update token for retry and continue the loop
+                    apiToken = newToken;
+                    console.log('Token refreshed successfully. Retrying request...');
+                    continue; // Retry the loop with the new token
+    
+                } else {
+                    // Refresh failed: break the loop, return the 401 response
+                    console.error('Token refresh failed. Aborting retry.');
+                    return response; 
+                }
             } else {
-                // Refresh failed: break the loop, return the 401 response
-                console.error('Token refresh failed. Aborting retry.');
-                return response; 
+                // console.debug('else response from serverFetch => ', response);
+                
+                // 7. Non-401 error, or 401 on the second attempt: return the response
+                return response;
             }
-        } else {
-            // 7. Non-401 error, or 401 on the second attempt: return the response
-            return response;
         }
+        
+        // Should be unreachable, but just in case
+        throw new Error("Server fetch logic failed to resolve or retry."); 
+    } catch (e) {
+        console.debug('serverFetch exception  => ', e);
     }
     
-    // Should be unreachable, but just in case
-    throw new Error("Server fetch logic failed to resolve or retry."); 
 }

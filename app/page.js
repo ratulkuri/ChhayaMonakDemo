@@ -13,7 +13,8 @@ export default async function HomePage() {
   try {
     // Use the reusable utility function
     const packagePricesRes = await serverFetch('/get-products', {
-      method: 'GET'
+      method: 'GET',
+      credentials: 'include',
       // All headers (x-signature, Authorization) are now handled internally
     });
 

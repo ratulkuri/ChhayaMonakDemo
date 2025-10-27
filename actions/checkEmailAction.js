@@ -10,6 +10,7 @@ export async function checkEmailAction(email) {
       cache: "no-store",
       // All headers (x-signature, Authorization) are now handled internally
     });
+      console.error('checkEmailAction res : ', res);
 
     if (!res.ok) {
       return { ok: false, message: `Server returned ${res.status}` };
@@ -19,6 +20,7 @@ export async function checkEmailAction(email) {
 
     return { ok: true, exists: data?.exists, user: data?.user };
   } catch (err) {
+      console.error('checkEmailAction exception : ', err);
     return { ok: false, message: err.message || "Phone check failed" };
   }
 }
