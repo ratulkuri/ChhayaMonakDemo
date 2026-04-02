@@ -114,7 +114,8 @@ function StepOne({ action = createOrderAction }) {
       }
     }
 
-    checkEmail()
+    startTransition(checkEmail);
+
     return () => {
       isCancelled = true
     }
